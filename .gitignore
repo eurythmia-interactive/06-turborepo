@@ -28,6 +28,10 @@ packages/shared/src/*.js.map
 # Testing & coverage
 coverage/
 .nyc_output/
+apps/api/test/**/*.js
+apps/api/test/**/*.d.ts
+apps/api/test/**/*.js.map
+apps/api/test/**/*.d.ts.map
 
 # Environment & secrets
 .env
