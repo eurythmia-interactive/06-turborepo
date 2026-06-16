@@ -1,0 +1,18 @@
+node_modules
+.next
+dist
+build
+.turbo
+coverage
+pnpm-lock.yaml
+*.min.js
+*.min.css
+
+# Auto-generated
+**/*.d.ts
+**/*.tsbuildinfo
+**/next-env.d.ts
+apps/web/next-env.d.ts
+
+# Plans
+Plan/

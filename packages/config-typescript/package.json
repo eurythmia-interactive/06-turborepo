@@ -1,0 +1,13 @@
+{
+  "name": "@repo/config-typescript",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared TypeScript base + per-app compiler configurations",
+  "license": "MIT",
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.next.json",
+    "tsconfig.nest.json",
+    "tsconfig.lib.json"
+  ]
+}

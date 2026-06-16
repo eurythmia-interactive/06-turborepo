@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# NestJS generated sourcemaps
+apps/api/src/**/*.d.ts.map
+apps/api/src/**/*.js.map
+
+# Next.js generated
+apps/web/next-env.d.ts
+
+# tsc generated artifacts
+packages/shared/src/*.d.ts
+packages/shared/src/*.d.ts.map
+packages/shared/src/*.js
+packages/shared/src/*.js.map
+
+# Turbo cache
+.turbo/
+
+# Testing & coverage
+coverage/
+.nyc_output/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json.example
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Prisma local artifacts
+packages/database/prisma/dev.db
+packages/database/prisma/dev.db-journal
+packages/database/prisma/migrations/dev_*
+
+# Husky
+.husky/_/
+
+# Misc
+.cache/
+.parcel-cache/
+.eslintcache

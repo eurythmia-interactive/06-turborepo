@@ -1,0 +1,5 @@
+{
+  "extends": "@repo/config-typescript/tsconfig.lib.json",
+  "include": ["src/**/*", "prisma/**/*"],
+  "exclude": ["node_modules", "dist", ".turbo"]
+}

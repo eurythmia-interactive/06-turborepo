@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NODE_ENV", "CI"],
+  "globalDependencies": ["tsconfig.base.json", ".prettierrc", "eslint.config.js"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "^db:generate"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": true,
+      "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json"]
+    }
+  }
+}
