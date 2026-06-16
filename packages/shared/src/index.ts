@@ -13,3 +13,22 @@ export const createResponse = <T>(data: T): ApiResponse<T> => ({
   status: HEALTH_CHECK,
   timestamp: new Date().toISOString(),
 });
+
+export {
+  loginSchema,
+  loginResponseSchema,
+  type LoginInput,
+  type LoginResponse,
+} from './auth/login.schema.js';
+export {
+  profileUpdateSchema,
+  profileResponseSchema,
+  type ProfileUpdateInput,
+  type ProfileResponse,
+} from './auth/profile.schema.js';
+export {
+  registerSchema,
+  registerResponseSchema,
+  type RegisterInput,
+  type RegisterResponse,
+} from './auth/register.schema.js';

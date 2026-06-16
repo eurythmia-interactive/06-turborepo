@@ -24,7 +24,8 @@
     },
     "db:generate": {
       "cache": true,
-      "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json"]
+      "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json"],
+      "outputs": ["src/generated/**"]
     }
   }
 }

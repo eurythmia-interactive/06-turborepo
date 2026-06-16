@@ -47,5 +47,12 @@ jobs:
       - name: Test
         run: pnpm turbo run test
 
+      # TODO: E2E tests disabled due to module resolution issue with @repo/database
+      # The package exports TypeScript source with .js extensions (NodeNext), but
+      # Vitest can't resolve .js -> .ts at the Node.js ESM loader level.
+      # Fix by either building @repo/database or using a different test approach.
+      # - name: E2E Tests
+      #   run: pnpm --filter @apps/api test:e2e
+
       - name: Oxlint pre-flight
         run: pnpm lint:ox
