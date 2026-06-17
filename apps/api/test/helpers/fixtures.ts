@@ -34,7 +34,7 @@ export async function createTestUser(
       name: options.name ?? 'Test User',
       role: options.role ?? Role.MEMBER,
       status: options.status ?? UserStatus.ACTIVE,
-      authProviders: {
+      providers: {
         create: {
           type: options.authProviderType ?? AuthProviderType.LOCAL,
           providerUserId: email,
@@ -68,4 +68,28 @@ export async function createTestRefreshToken(
   });
 
   return token.id;
+}
+
+export async function createTestTenant(
+  prisma: PrismaClient,
+  userId: string,
+  options: {
+    name?: string;
+    slug?: string;
+  } = {},
+) {
+  const slug = options.slug ?? `tenant-${randomUUID().slice(0, 8)}`;
+  const tenant = await prisma.tenant.create({
+    data: {
+      name: options.name ?? 'Test Tenant',
+      slug,
+      users: {
+        create: {
+          userId,
+        },
+      },
+    },
+  });
+
+  return tenant;
 }

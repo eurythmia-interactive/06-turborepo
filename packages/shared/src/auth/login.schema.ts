@@ -15,6 +15,13 @@ export const loginResponseSchema = z.object({
     name: z.string().nullable(),
     role: z.string(),
   }),
+  tenants: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      slug: z.string(),
+    }),
+  ),
 });
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>;

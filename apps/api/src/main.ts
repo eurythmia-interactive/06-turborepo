@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
@@ -10,10 +11,25 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  app.use(cookieParser());
+
   const corsOrigins = configService.get<string[]>('CORS_ORIGINS', []);
   app.enableCors({
-    origin: corsOrigins,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || corsOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+  });
+
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['/health'],
   });
 
   app.useGlobalPipes(new ZodValidationPipe());

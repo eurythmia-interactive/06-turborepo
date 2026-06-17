@@ -5,8 +5,16 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
-  JWT_EXPIRES_IN: z.string().default('7d'),
+  JWT_PRIVATE_KEY: z.string().optional(),
+  JWT_PUBLIC_KEY: z.string().optional(),
+  JWT_EXPIRES_IN_ACCESS: z.string().default('15m'),
+  JWT_EXPIRES_IN_REFRESH: z.string().default('7d'),
+  JWT_ISSUER: z.string().default('turborepo-api'),
+  JWT_AUDIENCE: z.string().default('turborepo-client'),
+  COOKIE_SECURE: z.coerce.boolean().default(false),
   CORS_ORIGINS: z.string().transform((val) => val.split(',').map((s) => s.trim())),
+  THROTTLE_TTL: z.coerce.number().int().positive().default(60000),
+  THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
 });
 
 export type Env = z.infer<typeof envSchema>;

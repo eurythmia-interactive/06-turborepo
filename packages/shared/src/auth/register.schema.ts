@@ -29,6 +29,13 @@ export const registerResponseSchema = z.object({
     name: z.string().nullable(),
     role: z.string(),
   }),
+  tenants: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      slug: z.string(),
+    }),
+  ),
 });
 
 export type RegisterResponse = z.infer<typeof registerResponseSchema>;

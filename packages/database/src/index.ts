@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/prisma/client.js';
+import { PrismaClient } from './generated/prisma/index.js';
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -30,7 +30,13 @@ if (isDev) {
   globalForPrisma.prisma = prisma;
 }
 
-export { PrismaClient } from './generated/prisma/client.js';
-export { Prisma } from './generated/prisma/client.js';
-export { AuthProviderType, Role, UserStatus } from './generated/prisma/enums.js';
-export type { AuthenticationProvider, RefreshToken, User } from './generated/prisma/client.js';
+export { PrismaClient } from './generated/prisma/index.js';
+export { Prisma } from './generated/prisma/index.js';
+export { AuthProviderType, Role, UserStatus } from './generated/prisma/index.js';
+export type {
+  AuthenticationProvider,
+  RefreshToken,
+  Tenant,
+  User,
+  UserTenant,
+} from './generated/prisma/index.js';
