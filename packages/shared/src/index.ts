@@ -19,16 +19,16 @@ export {
   loginResponseSchema,
   type LoginInput,
   type LoginResponse,
-} from './auth/login.schema';
+} from './auth/login.schema.js';
 export {
   profileUpdateSchema,
   profileResponseSchema,
   type ProfileUpdateInput,
   type ProfileResponse,
-} from './auth/profile.schema';
+} from './auth/profile.schema.js';
 export {
   registerSchema,
   registerResponseSchema,
   type RegisterInput,
   type RegisterResponse,
-} from './auth/register.schema';
+} from './auth/register.schema.js';

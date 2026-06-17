@@ -3,8 +3,9 @@
 import { ApiClient, ApiError, type RequestOptions } from './api-client';
 import { getAccessToken, clearTokens } from './token-store';
 import { RequestQueue } from './request-queue';
+import { clientEnv } from '../env';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_BASE_URL = clientEnv.NEXT_PUBLIC_API_URL;
 
 class AuthenticatedApiClient extends ApiClient {
   private refreshQueue = new RequestQueue();

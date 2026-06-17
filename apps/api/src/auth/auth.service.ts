@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { hash, verify } from 'argon2';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { AuthProviderType, type PrismaClient, Role, UserStatus } from '@repo/database';
 import { PRISMA_CLIENT } from '../database/database.module.js';
 import { TokenPayloadFactory } from './utilities/token-payload.factory.js';
@@ -38,6 +38,10 @@ export class AuthService {
     private readonly tokenPayloadFactory: TokenPayloadFactory,
     private readonly jwtConfigService: JwtConfigService,
   ) {}
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
 
   async login(email: string, password: string): Promise<LoginResult> {
     const provider = await this.prisma.authenticationProvider.findFirst({
@@ -89,7 +93,7 @@ export class AuthService {
     );
 
     const refreshData = this.tokenPayloadFactory.createRefreshTokenData();
-    const tokenHash = await hash(refreshData.rawToken);
+    const tokenHash = this.hashToken(refreshData.rawToken);
 
     await this.prisma.refreshToken.create({
       data: {
@@ -167,7 +171,7 @@ export class AuthService {
     );
 
     const refreshData = this.tokenPayloadFactory.createRefreshTokenData();
-    const tokenHash = await hash(refreshData.rawToken);
+    const tokenHash = this.hashToken(refreshData.rawToken);
 
     await this.prisma.refreshToken.create({
       data: {
@@ -193,7 +197,7 @@ export class AuthService {
   }
 
   async refreshTokens(rawRefreshToken: string): Promise<TokenPair> {
-    const tokenHash = await hash(rawRefreshToken);
+    const tokenHash = this.hashToken(rawRefreshToken);
 
     const existingToken = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
@@ -224,7 +228,7 @@ export class AuthService {
     const newSessionId = randomUUID();
     const newFamilyId = existingToken.familyId;
     const newRawToken = JwtConfigService.generateRefreshToken();
-    const newTokenHash = await hash(newRawToken);
+    const newTokenHash = this.hashToken(newRawToken);
 
     await this.prisma.refreshToken
       .update({
@@ -275,7 +279,7 @@ export class AuthService {
   }
 
   async logout(rawRefreshToken: string): Promise<void> {
-    const tokenHash = await hash(rawRefreshToken);
+    const tokenHash = this.hashToken(rawRefreshToken);
 
     const token = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },

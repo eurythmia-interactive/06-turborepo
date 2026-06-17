@@ -1,7 +1,8 @@
 import { cookies, headers } from 'next/headers';
 import { ApiClient, type RequestOptions } from './api-client';
+import { clientEnv } from '../env';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_BASE_URL = clientEnv.NEXT_PUBLIC_API_URL;
 
 class ServerApiClient extends ApiClient {
   constructor() {

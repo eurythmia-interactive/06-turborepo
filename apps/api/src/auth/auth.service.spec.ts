@@ -22,6 +22,19 @@ vi.mock('argon2', () => ({
   verify: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('node:crypto', async () => {
+  const actual = await vi.importActual('node:crypto');
+  return {
+    ...actual,
+    createHash: vi.fn().mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        digest: vi.fn().mockReturnValue('sha256-hashed-value'),
+      }),
+    }),
+    randomUUID: vi.fn().mockReturnValue('test-uuid'),
+  };
+});
+
 import { hash, verify } from 'argon2';
 
 describe('AuthService', () => {
@@ -179,7 +192,7 @@ describe('AuthService', () => {
           data: expect.objectContaining({
             id: 'session-1',
             userId: 'user-1',
-            tokenHash: 'hashed-value',
+            tokenHash: 'sha256-hashed-value',
             familyId: 'family-1',
           }),
         }),
@@ -330,7 +343,7 @@ describe('AuthService', () => {
           data: expect.objectContaining({
             id: 'session-1',
             userId: 'user-1',
-            tokenHash: 'hashed-value',
+            tokenHash: 'sha256-hashed-value',
             familyId: 'family-1',
           }),
         }),
@@ -360,7 +373,7 @@ describe('AuthService', () => {
     const existingToken = {
       id: 'session-1',
       userId: 'user-1',
-      tokenHash: 'hashed-value',
+      tokenHash: 'sha256-hashed-value',
       familyId: 'family-1',
       revoked: false,
       expiresAt: new Date(Date.now() + 86400000),
@@ -399,7 +412,8 @@ describe('AuthService', () => {
 
       await service.refreshTokens('valid-refresh-token');
 
-      expect(hash).toHaveBeenCalledWith('valid-refresh-token');
+      const { createHash } = await import('node:crypto');
+      expect(createHash).toHaveBeenCalledWith('sha256');
     });
 
     it('should revoke the old token and create a new one', async () => {
@@ -532,7 +546,8 @@ describe('AuthService', () => {
 
       await service.logout('my-token');
 
-      expect(hash).toHaveBeenCalledWith('my-token');
+      const { createHash } = await import('node:crypto');
+      expect(createHash).toHaveBeenCalledWith('sha256');
     });
 
     it('should not throw when token is not found', async () => {

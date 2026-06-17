@@ -13,6 +13,7 @@ pnpm-lock.yaml
 **/*.tsbuildinfo
 **/next-env.d.ts
 apps/web/next-env.d.ts
+packages/database/src/generated/
 
 # Plans
 Plan/

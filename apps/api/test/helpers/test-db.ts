@@ -15,9 +15,13 @@ export async function teardownTestDatabase(): Promise<void> {
 export async function cleanTestDatabase(): Promise<void> {
   await prisma.refreshToken.deleteMany();
   await prisma.authenticationProvider.deleteMany();
+  await prisma.userTenant.deleteMany();
+  await prisma.tenant.deleteMany();
   await prisma.user.deleteMany();
 }
 
 export async function getTestPrismaClient(): Promise<PrismaClient> {
   return prisma;
 }
+
+export { getTransactionProxy, runInTransaction, startSandbox, endSandbox } from './db-sandbox.js';

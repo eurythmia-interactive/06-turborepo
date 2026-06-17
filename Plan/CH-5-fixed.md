@@ -17,6 +17,7 @@ The codebase has a scaffolded auth module but **zero implementation**. Critical 
 ### Phase 0: Prerequisites & Foundation
 
 **0.1 Sync Prisma Schema**
+
 - Update `packages/database/prisma/schema.prisma` to match generated client:
   - Add enums: `AuthProviderType`, `UserStatus`, `Role`
   - Extend `User` model: add `image`, `status`, `role` fields
@@ -26,12 +27,14 @@ The codebase has a scaffolded auth module but **zero implementation**. Critical 
 - Verify generated types export correctly
 
 **0.2 Install Dependencies**
+
 ```bash
 pnpm --filter @apps/api add @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt cookie-parser
 pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-parser
 ```
 
 **0.3 Update Environment Configuration**
+
 - Extend `env.validation.ts` Zod schema:
   - `JWT_PRIVATE_KEY` (optional, for RS256 production)
   - `JWT_PUBLIC_KEY` (optional, for RS256 production)
@@ -47,6 +50,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 1: Task 5.1 — Token Signing & Encryption
 
 **1.1 Cryptographic Key Pair Configuration**
+
 - Create `apps/api/src/auth/config/jwt.config.ts`:
   - Async factory reading env vars
   - Production: RS256 with private/public key pair (base64-encoded env vars or file paths)
@@ -54,6 +58,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   - Export `JwtConfig` interface with `secret`, `publicKey`, `privateKey`, `signOptions`, `verifyOptions`
 
 **1.2 NestJS JWT Module Configuration**
+
 - Update `apps/api/src/auth/auth.module.ts`:
   - Import `JwtModule.registerAsync()` with dynamic config
   - Configure two token profiles:
@@ -61,11 +66,13 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
     - Refresh token: 7d expiry, includes `sub`, `sessionId` (UUID), `familyId` (UUID)
 
 **1.3 Token Payload Architecture**
+
 - Create `apps/api/src/auth/interfaces/token-payload.interface.ts`:
+
   ```typescript
   interface AccessTokenPayload {
-    sub: string;        // User ID
-    email?: string;     // Optional, omit for privacy
+    sub: string; // User ID
+    email?: string; // Optional, omit for privacy
     role: Role;
     status: UserStatus;
     iss: string;
@@ -73,20 +80,22 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
     iat: number;
     exp: number;
   }
-  
+
   interface RefreshTokenPayload {
     sub: string;
-    sessionId: string;  // Unique per token
-    familyId: string;   // Groups rotated tokens
+    sessionId: string; // Unique per token
+    familyId: string; // Groups rotated tokens
     iat: number;
     exp: number;
   }
   ```
+
 - Create `apps/api/src/auth/utilities/token-payload.factory.ts`:
   - `buildAccessTokenPayload(user, config)` — excludes sensitive fields
   - `buildRefreshTokenPayload(userId, sessionId, familyId)`
 
 **Testing 1.1–1.3:**
+
 - Unit tests for `jwt.config.ts`: verify RS256 vs HMAC fallback logic
 - Unit tests for payload factories: ensure no sensitive data leaks
 - Integration test: sign + verify token round-trip with both algorithms
@@ -96,6 +105,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 2: Task 5.2 — Secure Cookie Transmission
 
 **2.1 Express v5 Cookie Parser Integration**
+
 - Update `apps/api/src/main.ts`:
   ```typescript
   import * as cookieParser from 'cookie-parser';
@@ -104,12 +114,14 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **2.2 Strict Refresh Cookie Properties**
+
 - Create `apps/api/src/auth/utilities/cookie.utility.ts`:
+
   ```typescript
   export function setRefreshTokenCookie(
     response: Response,
     token: string,
-    config: { secure: boolean; maxAge: number }
+    config: { secure: boolean; maxAge: number },
   ) {
     response.cookie('refreshToken', token, {
       httpOnly: true,
@@ -119,7 +131,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
       maxAge: config.maxAge,
     });
   }
-  
+
   export function clearRefreshTokenCookie(response: Response) {
     response.cookie('refreshToken', '', {
       httpOnly: true,
@@ -132,6 +144,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **2.3 CORS Configuration**
+
 - Update `apps/api/src/main.ts` (already partially done):
   ```typescript
   app.enableCors({
@@ -148,6 +161,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **Testing 2.1–2.3:**
+
 - E2E test: verify `cookie-parser` middleware parses cookies correctly
 - Unit test: `setRefreshTokenCookie` sets correct attributes (mock response object)
 - E2E test: CORS rejects requests from unlisted origins with `credentials: true`
@@ -158,7 +172,9 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 3: Task 5.3 — Stateless Route Guards
 
 **3.1 Custom Access Token Guard**
+
 - Create `apps/api/src/auth/guards/jwt-auth.guard.ts`:
+
   ```typescript
   @Injectable()
   export class JwtAuthGuard implements CanActivate {
@@ -166,12 +182,12 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
       private jwtService: JwtService,
       private configService: ConfigService,
     ) {}
-  
+
     canActivate(context: ExecutionContext): boolean {
       const request = context.switchToHttp().getRequest();
       const token = this.extractTokenFromHeader(request);
       if (!token) throw new UnauthorizedException('Missing access token');
-      
+
       try {
         const payload = this.jwtService.verify(token, {
           secret: this.configService.get('JWT_PUBLIC_KEY') || this.configService.get('JWT_SECRET'),
@@ -183,7 +199,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
       }
       return true;
     }
-  
+
     private extractTokenFromHeader(request: Request): string | undefined {
       const [type, token] = request.headers.authorization?.split(' ') ?? [];
       return type === 'Bearer' ? token : undefined;
@@ -192,6 +208,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **3.2 Token Integrity Verification**
+
 - Enhance `JwtAuthGuard` to validate:
   - `iss` matches expected issuer
   - `aud` matches expected audience
@@ -199,6 +216,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   - Signature valid (handled by `jwtService.verify`)
 
 **3.3 Execution Context Enrichment**
+
 - `JwtAuthGuard` already binds `request.user = payload` (done in 3.1)
 - Create `apps/api/src/auth/interfaces/authenticated-user.interface.ts`:
   ```typescript
@@ -210,7 +228,9 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **3.4 Route Decorators**
+
 - Create `apps/api/src/common/decorators/current-user.decorator.ts`:
+
   ```typescript
   export const CurrentUser = createParamDecorator(
     (data: keyof AuthenticatedUser | undefined, ctx: ExecutionContext) => {
@@ -221,6 +241,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 - Create `apps/api/src/common/decorators/public.decorator.ts`:
+
   ```typescript
   export const IS_PUBLIC_KEY = 'isPublic';
   export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
@@ -230,12 +251,11 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 
 - Register `JwtAuthGuard` globally in `app.module.ts`:
   ```typescript
-  providers: [
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-  ]
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }];
   ```
 
 **Testing 3.1–3.4:**
+
 - Unit test: `JwtAuthGuard` rejects requests without `Authorization` header
 - Unit test: `JwtAuthGuard` rejects expired/malformed tokens
 - Unit test: `JwtAuthGuard` enriches `request.user` with payload
@@ -248,6 +268,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 4: Task 5.4 — Role-Based Authorization Guards (RBAC)
 
 **4.1 Roles Metadata Decorator**
+
 - Create `apps/api/src/auth/decorators/roles.decorator.ts`:
   ```typescript
   export const ROLES_KEY = 'roles';
@@ -255,19 +276,21 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **4.2 Hierarchical RBAC Guard**
+
 - Create `apps/api/src/auth/guards/roles.guard.ts`:
+
   ```typescript
   @Injectable()
   export class RolesGuard implements CanActivate {
     constructor(private reflector: Reflector) {}
-  
+
     canActivate(context: ExecutionContext): boolean {
       const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
         context.getHandler(),
         context.getClass(),
       ]);
       if (!requiredRoles) return true;
-  
+
       const { user } = context.switchToHttp().getRequest();
       const hasRole = requiredRoles.some((role) => user.role === role);
       if (!hasRole) throw new ForbiddenException('Insufficient role');
@@ -279,34 +302,36 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 - Register `RolesGuard` globally in `app.module.ts` (after `JwtAuthGuard`).
 
 **4.3 Action-Based Permission Scopes**
+
 - Create `apps/api/src/auth/decorators/permissions.decorator.ts`:
+
   ```typescript
   export const PERMISSIONS_KEY = 'permissions';
-  export const Permissions = (...permissions: string[]) => SetMetadata(PERMISSIONS_KEY, permissions);
+  export const Permissions = (...permissions: string[]) =>
+    SetMetadata(PERMISSIONS_KEY, permissions);
   ```
 
 - Create `apps/api/src/auth/guards/permissions.guard.ts`:
+
   ```typescript
   @Injectable()
   export class PermissionsGuard implements CanActivate {
     constructor(private reflector: Reflector) {}
-  
+
     canActivate(context: ExecutionContext): boolean {
       const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
         context.getHandler(),
         context.getClass(),
       ]);
       if (!requiredPermissions) return true;
-  
+
       const { user } = context.switchToHttp().getRequest();
       const userPermissions = this.getPermissionsForRole(user.role);
-      const hasPermission = requiredPermissions.every((perm) =>
-        userPermissions.includes(perm),
-      );
+      const hasPermission = requiredPermissions.every((perm) => userPermissions.includes(perm));
       if (!hasPermission) throw new ForbiddenException('Insufficient permissions');
       return true;
     }
-  
+
     private getPermissionsForRole(role: Role): string[] {
       const rolePermissions: Record<Role, string[]> = {
         ADMIN: ['user:read', 'user:write', 'user:delete', 'billing:read', 'billing:write'],
@@ -321,6 +346,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 - Register `PermissionsGuard` globally (after `RolesGuard`).
 
 **Testing 4.1–4.3:**
+
 - Unit test: `@Roles()` decorator attaches metadata
 - Unit test: `RolesGuard` allows access when user has required role
 - Unit test: `RolesGuard` throws `ForbiddenException` when user lacks role
@@ -334,6 +360,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 5: Task 5.5 — Session Revocation & Token Rotation
 
 **5.1 Token Rotation Exchange Pipeline**
+
 - Implement `AuthService.refreshTokens(refreshToken: string)`:
   - Hash incoming token with bcrypt
   - Query `RefreshToken` table by `tokenHash`
@@ -343,13 +370,14 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   - Return new tokens
 
 - Implement `AuthController.refresh()`:
+
   ```typescript
   @Post('refresh')
   @Public()
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const refreshToken = request.cookies?.refreshToken;
     if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
-  
+
     const tokens = await this.authService.refreshTokens(refreshToken);
     setRefreshTokenCookie(response, tokens.refreshToken, this.cookieConfig);
     return { accessToken: tokens.accessToken };
@@ -357,7 +385,9 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **5.2 Cryptographic Token Reuse Detection**
+
 - Enhance `AuthService.refreshTokens`:
+
   ```typescript
   async refreshTokens(refreshToken: string) {
     const tokenHash = await bcrypt.hash(refreshToken, 10);
@@ -365,7 +395,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
       where: { tokenHash },
       include: { user: true },
     });
-  
+
     if (!existingToken) throw new UnauthorizedException('Invalid refresh token');
     if (existingToken.revoked) {
       // Token reuse detected — revoke entire family
@@ -375,17 +405,17 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
     if (existingToken.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token expired');
     }
-  
+
     const newRefreshTokenId = randomUUID();
     const newRefreshToken = `${newRefreshTokenId}.${randomBytes(32).toString('hex')}`;
     const newTokenHash = await bcrypt.hash(newRefreshToken, 10);
-  
+
     // Mark old token as replaced
     await this.prisma.refreshToken.update({
       where: { id: existingToken.id },
       data: { replacedById: newRefreshTokenId },
     });
-  
+
     // Create new token
     await this.prisma.refreshToken.create({
       data: {
@@ -396,14 +426,14 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
-  
+
     const accessToken = this.jwtService.sign(
       this.tokenPayloadFactory.buildAccessTokenPayload(existingToken.user, this.jwtConfig),
     );
-  
+
     return { accessToken, refreshToken: newRefreshToken };
   }
-  
+
   private async revokeTokenFamily(familyId: string) {
     await this.prisma.refreshToken.updateMany({
       where: { familyId },
@@ -413,7 +443,9 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **5.3 Session Revocation (Logout Controller)**
+
 - Implement `AuthService.logout(refreshToken: string)`:
+
   ```typescript
   async logout(refreshToken: string) {
     const tokenHash = await bcrypt.hash(refreshToken, 10);
@@ -438,6 +470,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **Testing 5.1–5.3:**
+
 - Unit test: `refreshTokens` returns new access + refresh pair
 - Unit test: `refreshTokens` marks old token as `replacedById`
 - Unit test: `refreshTokens` revokes entire family on token reuse (mock Prisma)
@@ -451,6 +484,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 6: Auth Endpoints Integration
 
 **6.1 Login Endpoint**
+
 - Implement `AuthService.login(email: string, password: string)`:
   - Query user by email with `AuthenticationProvider` (type: LOCAL)
   - Compare password hash with bcrypt
@@ -471,6 +505,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **6.2 Register Endpoint**
+
 - Implement `AuthService.register(input: RegisterInput)`:
   - Hash password with bcrypt (10 rounds)
   - Create user + `AuthenticationProvider` in transaction
@@ -491,6 +526,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **6.3 Profile Endpoint**
+
 - Implement `AuthService.getProfile(userId: string)`:
   - Query user by ID
   - Return profile object
@@ -500,6 +536,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   - Return updated profile
 
 - Implement `AuthController.getProfile()`:
+
   ```typescript
   @Get('profile')
   async getProfile(@CurrentUser('userId') userId: string) {
@@ -520,6 +557,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
   ```
 
 **Testing 6.1–6.3:**
+
 - E2E test: `/api/v1/auth/register` creates user, returns tokens, sets cookie
 - E2E test: `/api/v1/auth/login` validates credentials, returns tokens
 - E2E test: `/api/v1/auth/login` rejects invalid credentials with 401
@@ -531,6 +569,7 @@ pnpm --filter @apps/api add -D @types/passport-jwt @types/bcrypt @types/cookie-p
 ### Phase 7: End-to-End Integration Tests
 
 **7.1 Full Auth Flow Test**
+
 ```typescript
 describe('Auth Flow (e2e)', () => {
   it('register → login → refresh → profile → logout', async () => {
@@ -539,30 +578,30 @@ describe('Auth Flow (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({ email: 'test@example.com', password: 'Test1234!', confirmPassword: 'Test1234!' })
       .expect(201);
-    
+
     const { accessToken, user } = registerRes.body;
     const refreshTokenCookie = registerRes.headers['set-cookie'][0];
-    
+
     // 2. Access protected route
     await request(app.getHttpServer())
       .get('/api/v1/auth/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    
+
     // 3. Refresh tokens
     const refreshRes = await request(app.getHttpServer())
       .post('/api/v1/auth/refresh')
       .set('Cookie', refreshTokenCookie)
       .expect(201);
-    
+
     const newAccessToken = refreshRes.body.accessToken;
-    
+
     // 4. Logout
     await request(app.getHttpServer())
       .post('/api/v1/auth/logout')
       .set('Cookie', refreshTokenCookie)
       .expect(201);
-    
+
     // 5. Verify old token revoked
     await request(app.getHttpServer())
       .post('/api/v1/auth/refresh')
@@ -573,6 +612,7 @@ describe('Auth Flow (e2e)', () => {
 ```
 
 **7.2 Token Reuse Detection Test**
+
 ```typescript
 it('detects token reuse and revokes family', async () => {
   // 1. Login and get refresh token
@@ -584,6 +624,7 @@ it('detects token reuse and revokes family', async () => {
 ```
 
 **7.3 RBAC Integration Test**
+
 ```typescript
 it('enforces role-based access control', async () => {
   // 1. Login as MEMBER
@@ -635,18 +676,18 @@ apps/api/src/
 
 ## Testing Strategy Summary
 
-| Component | Test Type | Count |
-|-----------|-----------|-------|
-| JWT config | Unit | 3 |
-| Payload factories | Unit | 4 |
-| Cookie utilities | Unit | 3 |
-| JWT auth guard | Unit | 5 |
-| Roles guard | Unit | 3 |
-| Permissions guard | Unit | 3 |
-| Auth service | Unit | 8 |
-| Auth endpoints | E2E | 12 |
-| Full auth flow | E2E | 3 |
-| **Total** | | **44** |
+| Component         | Test Type | Count  |
+| ----------------- | --------- | ------ |
+| JWT config        | Unit      | 3      |
+| Payload factories | Unit      | 4      |
+| Cookie utilities  | Unit      | 3      |
+| JWT auth guard    | Unit      | 5      |
+| Roles guard       | Unit      | 3      |
+| Permissions guard | Unit      | 3      |
+| Auth service      | Unit      | 8      |
+| Auth endpoints    | E2E       | 12     |
+| Full auth flow    | E2E       | 3      |
+| **Total**         |           | **44** |
 
 ---
 
@@ -679,6 +720,7 @@ apps/api/src/
 ### Key Changes from Original Plan
 
 **1. Prisma Schema Updates**
+
 ```prisma
 enum Role {
   SUPER_ADMIN
@@ -708,7 +750,7 @@ model User {
   role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   authProviders AuthenticationProvider[]
   refreshTokens RefreshToken[]
   tenants       UserTenant[]
@@ -720,7 +762,7 @@ model Tenant {
   slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   users     UserTenant[]
   projects  Project[] // Future resource
 }
@@ -729,10 +771,10 @@ model UserTenant {
   userId   String
   tenantId String
   createdAt DateTime @default(now())
-  
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+
   @@id([userId, tenantId])
 }
 
@@ -744,9 +786,9 @@ model AuthenticationProvider {
   passwordHash   String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([type, providerUserId])
 }
 
@@ -759,27 +801,32 @@ model RefreshToken {
   revoked      Boolean   @default(false)
   expiresAt    DateTime
   createdAt    DateTime  @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
 
 **2. Global API Prefix**
+
 - Set `app.setGlobalPrefix('api/v1')` in `main.ts`
 - Exclude health check: `app.setGlobalPrefix('api/v1', { exclude: ['/health'] })`
 
 **3. Password Hashing**
+
 - Replace `bcrypt` with `argon2` in dependencies
 - Use `argon2.hash(password)` and `argon2.verify(hash, password)`
 
 **4. Rate Limiting**
+
 - Install `@nestjs/throttler`
 - Configure in `app.module.ts`:
   ```typescript
-  ThrottlerModule.forRoot([{
-    ttl: 60000,
-    limit: 10,
-  }])
+  ThrottlerModule.forRoot([
+    {
+      ttl: 60000,
+      limit: 10,
+    },
+  ]);
   ```
 - Apply stricter limits to auth endpoints:
   ```typescript
@@ -790,16 +837,18 @@ model RefreshToken {
 **5. Tenant System Implementation**
 
 **5.1 Tenant Selection Flow**
+
 - Login endpoint returns list of accessible tenants (if user belongs to multiple)
 - User must select tenant → receives JWT with `tenantId` claim
 - Or: login accepts optional `tenantId` parameter for single-tenant users
 
 **5.2 JWT Payload with Tenant Context**
+
 ```typescript
 interface AccessTokenPayload {
-  sub: string;        // User ID
-  tenantId: string;   // Active tenant
-  role: Role;         // Global role
+  sub: string; // User ID
+  tenantId: string; // Active tenant
+  role: Role; // Global role
   status: UserStatus;
   iss: string;
   aud: string;
@@ -809,32 +858,37 @@ interface AccessTokenPayload {
 ```
 
 **5.3 Tenant Guard**
+
 - Create `TenantGuard` to verify user belongs to active tenant
 - Extract `tenantId` from JWT
 - Query `UserTenant` to verify membership
 - Attach tenant context to request
 
 **5.4 Tenant-Scoped Resources**
+
 - All future models (Project, Task, etc.) include `tenantId` foreign key
 - Use tenant-scoped Prisma queries:
   ```typescript
   this.prisma.project.findMany({
-    where: { tenantId: request.tenantId }
-  })
+    where: { tenantId: request.tenantId },
+  });
   ```
 
 **6. Super Admin Tenant Creation**
+
 - Create `TenantController` with `POST /api/v1/tenants`
 - Protect with `@Roles(Role.SUPER_ADMIN)`
 - Endpoint creates tenant + assigns creator as first member
 
 **7. Updated Dependencies**
+
 ```bash
 pnpm --filter @apps/api add @nestjs/jwt @nestjs/passport passport passport-jwt argon2 cookie-parser @nestjs/throttler
 pnpm --filter @apps/api add -D @types/passport-jwt
 ```
 
 **8. Updated Environment Variables**
+
 ```env
 JWT_SECRET=...
 JWT_PRIVATE_KEY=...  # Base64-encoded RSA private key (production)
@@ -849,6 +903,7 @@ THROTTLE_LIMIT=10
 ```
 
 **9. Updated File Structure**
+
 ```
 apps/api/src/
   auth/
@@ -886,21 +941,21 @@ apps/api/src/
 
 **10. Updated Testing Strategy**
 
-| Component | Test Type | Count |
-|-----------|-----------|-------|
-| JWT config | Unit | 3 |
-| Payload factories | Unit | 4 |
-| Cookie utilities | Unit | 3 |
-| JWT auth guard | Unit | 5 |
-| Tenant guard | Unit | 4 |
-| Roles guard | Unit | 3 |
-| Permissions guard | Unit | 3 |
-| Auth service | Unit | 8 |
-| Tenant service | Unit | 4 |
-| Auth endpoints | E2E | 12 |
-| Tenant endpoints | E2E | 4 |
-| Full auth flow | E2E | 3 |
-| **Total** | | **56** |
+| Component         | Test Type | Count  |
+| ----------------- | --------- | ------ |
+| JWT config        | Unit      | 3      |
+| Payload factories | Unit      | 4      |
+| Cookie utilities  | Unit      | 3      |
+| JWT auth guard    | Unit      | 5      |
+| Tenant guard      | Unit      | 4      |
+| Roles guard       | Unit      | 3      |
+| Permissions guard | Unit      | 3      |
+| Auth service      | Unit      | 8      |
+| Tenant service    | Unit      | 4      |
+| Auth endpoints    | E2E       | 12     |
+| Tenant endpoints  | E2E       | 4      |
+| Full auth flow    | E2E       | 3      |
+| **Total**         |           | **56** |
 
 **11. Updated Execution Order**
 
