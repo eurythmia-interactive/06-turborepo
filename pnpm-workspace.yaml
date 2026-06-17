@@ -13,3 +13,4 @@ allowBuilds:
   protobufjs: true
   ssh2: true
   argon2: true
+  msw: true

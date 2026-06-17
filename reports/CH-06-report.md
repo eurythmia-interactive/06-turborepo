@@ -331,12 +331,108 @@ apps/web/
 
 ---
 
+## Testing Infrastructure
+
+**Status:** ✅ Complete
+
+### Test Stack
+
+| Tool                  | Version | Purpose                                        |
+| --------------------- | ------- | ---------------------------------------------- |
+| Vitest                | 4.1.9   | Test runner (native ESM, Turbopack-compatible) |
+| React Testing Library | 16.3.2  | Component testing (user behavior focus)        |
+| MSW                   | 2.14.6  | API mocking at network level                   |
+| jsdom                 | 29.1.1  | DOM environment for component tests            |
+| @vitejs/plugin-react  | 6.0.2   | React JSX transform for Vitest                 |
+
+### Test Results
+
+```
+Test Files  12 passed (12)
+     Tests  85 passed (85)
+  Duration  8.21s
+```
+
+### Coverage Report
+
+```
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   72.16 |    53.88 |   79.16 |      73 |
+ actions           |   91.66 |    72.22 |     100 |   91.66 |
+  auth.ts          |     100 |      100 |     100 |     100 |
+  profile.ts       |     100 |    83.33 |     100 |     100 |
+  register.ts      |      75 |    33.33 |     100 |      75 |
+ lib               |   80.50 |    75.00 |   77.41 |   79.64 |
+  api-client.ts    |     100 |    91.66 |     100 |     100 |
+  request-queue.ts |     100 |    75.00 |     100 |     100 |
+  session.ts       |     100 |      100 |     100 |     100 |
+  token-store.ts   |   91.30 |    92.85 |     100 |   90.00 |
+  utils.ts         |     100 |      100 |     100 |     100 |
+ components/forms  |   40.29 |    34.17 |   72.22 |   43.54 |
+ components/layout |     100 |      100 |     100 |     100 |
+ components/ui     |   88.37 |    57.89 |   88.23 |   88.37 |
+-------------------|---------|----------|---------|---------|-------------------
+```
+
+### Test Files Created
+
+**Unit Tests — Core Logic (4 files, 44 tests):**
+
+- `src/__tests__/unit/lib/api-client.test.ts` — 21 tests: timeout handling, JSON serialization, error classes, all HTTP methods, credentials, custom headers
+- `src/__tests__/unit/lib/token-store.test.ts` — 10 tests: cookie parsing, URL-encoded values, SSR safety, token clearing
+- `src/__tests__/unit/lib/request-queue.test.ts` — 7 tests: request execution, error propagation, concurrent refresh deduplication
+- `src/__tests__/unit/lib/session.test.ts` — 6 tests: cookie-based session parsing, partial data, isAuthenticated helper
+
+**Unit Tests — Server Actions (3 files, 21 tests):**
+
+- `src/__tests__/unit/actions/auth.test.ts` — 7 tests: email/password validation, API call format, 401 handling, network errors
+- `src/__tests__/unit/actions/register.test.ts` — 7 tests: email validation, password strength, mismatch detection, 409 conflict
+- `src/__tests__/unit/actions/profile.test.ts` — 7 tests: name/image updates, URL validation, partial updates, API errors
+
+**Component Tests (5 files, 20 tests):**
+
+- `src/__tests__/components/forms/login-form.test.tsx` — 5 tests: field rendering, button, register link, autocomplete, input types
+- `src/__tests__/components/forms/register-form.test.tsx` — 5 tests: all fields, optional name, submit button, login link, input types
+- `src/__tests__/components/forms/profile-form.test.tsx` — 4 tests: field rendering, submit button, profile display, save status
+- `src/__tests__/components/layout/page-header.test.tsx` — 4 tests: title, description, children actions, conditional rendering
+- `src/__tests__/components/ui/theme-toggle.test.tsx` — 2 tests: button rendering, accessible label
+
+### Mocking Infrastructure
+
+- `src/mocks/handlers.ts` — MSW handlers for `/api/v1/auth/login`, `/register`, `/profile`, `/refresh`, `/health` with success/error/network-error variants
+- `src/mocks/server.ts` — MSW server setup
+- `src/__tests__/setup.ts` — Global test setup (server lifecycle, jest-dom matchers, cleanup)
+
+### Configuration
+
+- `apps/web/vitest.config.ts` — Vitest config with jsdom environment, path aliases, coverage exclusions
+- `apps/web/package.json` — Added `test`, `test:watch`, `test:coverage` scripts
+
+### Test Commands
+
+```bash
+pnpm --filter @apps/web test            # Run all tests
+pnpm --filter @apps/web test:watch      # Watch mode
+pnpm --filter @apps/web test:coverage   # Coverage report (v8 provider)
+```
+
+### Issues Encountered During Testing
+
+1. **Zod 4 schema strictness** — `profileUpdateSchema.partial()` still requires `image` to be a valid URL when present; tests adjusted to provide both fields
+2. **`document.cookie` in jsdom** — Cannot clear cookies by assignment; tests use `Object.defineProperty` for cookie mocking
+3. **`any` types in mocks** — ESLint `no-explicit-any` rule required `as unknown as Awaited<ReturnType<typeof cookies>>` cast pattern instead of `as any`
+4. **React hook mocking** — `useActionState` and `useOptimistic` mocked via `vi.mock('react')` with `vi.importActual` passthrough
+
+---
+
 ## Conclusion
 
-Chapter 6 successfully delivered a production-ready Next.js 16 dashboard with modern React patterns, comprehensive design system, robust form handling, secure API client, and authentication guards. All code passes build, lint, and type checks. The application is ready for backend integration in subsequent chapters.
+Chapter 6 successfully delivered a production-ready Next.js 16 dashboard with modern React patterns, comprehensive design system, robust form handling, secure API client, and authentication guards. All code passes build, lint, type checks, and 85 automated tests.
 
-**Total Implementation Time:** ~2 hours  
-**Files Created:** 42  
+**Total Implementation Time:** ~3 hours  
+**Files Created:** 58 (42 implementation + 16 test/config)  
 **Files Modified:** 8  
-**Lines of Code:** ~3,500  
-**Test Coverage:** N/A (testing setup in Chapter 9)
+**Lines of Code:** ~4,500 (implementation + tests)  
+**Test Coverage:** 72% statements, 54% branches, 79% functions, 73% lines
