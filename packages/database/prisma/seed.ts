@@ -1,15 +1,16 @@
+import { hash } from 'argon2';
 import { AuthProviderType, Role, UserStatus, prisma } from '../src/index.ts';
 
 async function main(): Promise<void> {
-  const adminEmail = 'admin@example.com';
-  const adminProviderId = adminEmail;
+  const adminPassword = await hash('Admin123!');
+  const memberPassword = await hash('Member123!');
 
   const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
+    where: { email: 'admin@example.com' },
     update: {},
     create: {
-      email: adminEmail,
-      name: 'Default Admin',
+      email: 'admin@example.com',
+      name: 'Admin User',
       role: Role.ADMIN,
       status: UserStatus.ACTIVE,
     },
@@ -19,19 +20,72 @@ async function main(): Promise<void> {
     where: {
       type_providerUserId: {
         type: AuthProviderType.LOCAL,
-        providerUserId: adminProviderId,
+        providerUserId: 'admin@example.com',
       },
     },
     update: {},
     create: {
       userId: admin.id,
       type: AuthProviderType.LOCAL,
-      providerUserId: adminProviderId,
-      passwordHash: 'dev-only-placeholder-replace-in-auth-chapter',
+      providerUserId: 'admin@example.com',
+      passwordHash: adminPassword,
     },
   });
 
-  process.stdout.write(`Seeded admin user: ${admin.email}\n`);
+  await prisma.tenant.upsert({
+    where: { slug: 'admin-tenant' },
+    update: {},
+    create: {
+      name: 'Admin Tenant',
+      slug: 'admin-tenant',
+      users: {
+        create: { userId: admin.id },
+      },
+    },
+  });
+
+  const member = await prisma.user.upsert({
+    where: { email: 'member@example.com' },
+    update: {},
+    create: {
+      email: 'member@example.com',
+      name: 'Member User',
+      role: Role.MEMBER,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  await prisma.authenticationProvider.upsert({
+    where: {
+      type_providerUserId: {
+        type: AuthProviderType.LOCAL,
+        providerUserId: 'member@example.com',
+      },
+    },
+    update: {},
+    create: {
+      userId: member.id,
+      type: AuthProviderType.LOCAL,
+      providerUserId: 'member@example.com',
+      passwordHash: memberPassword,
+    },
+  });
+
+  await prisma.tenant.upsert({
+    where: { slug: 'member-tenant' },
+    update: {},
+    create: {
+      name: 'Member Tenant',
+      slug: 'member-tenant',
+      users: {
+        create: { userId: member.id },
+      },
+    },
+  });
+
+  process.stdout.write('Seeded users:\n');
+  process.stdout.write('  admin@example.com / Admin123! (ADMIN)\n');
+  process.stdout.write('  member@example.com / Member123! (MEMBER)\n');
 }
 
 main()

@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
-import { type Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { PRISMA_CLIENT } from '../../database/database.module.js';
 import type { PrismaClient } from '@repo/database';

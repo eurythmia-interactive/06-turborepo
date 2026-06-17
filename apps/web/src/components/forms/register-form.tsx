@@ -47,18 +47,9 @@ export function RegisterForm() {
     }
   }, [state, form]);
 
-  async function onSubmit(data: RegisterInput) {
-    const formData = new FormData();
-    formData.set('email', data.email);
-    if (data.name) formData.set('name', data.name);
-    formData.set('password', data.password);
-    formData.set('confirmPassword', data.confirmPassword);
-    await formAction(formData);
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form action={formAction} className="space-y-6" noValidate>
         <div className="space-y-4">
           <FormField
             control={form.control}

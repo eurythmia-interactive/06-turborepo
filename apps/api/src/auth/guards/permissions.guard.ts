@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { type Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { Role } from '@repo/database';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator.js';

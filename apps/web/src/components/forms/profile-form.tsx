@@ -55,42 +55,45 @@ export function ProfileForm({ initialProfile }: ProfilePageProps) {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const isValid = await form.trigger();
-    if (!isValid) return;
+    form.trigger().then((isValid) => {
+      if (!isValid) return;
 
-    const values = form.getValues();
-    setSaveStatus('saving');
+      const values = form.getValues();
+      setSaveStatus('saving');
 
-    setOptimisticProfile({
-      name: values.name ?? optimisticProfile.name,
-      image: values.image ?? optimisticProfile.image,
-    });
+      setOptimisticProfile({
+        name: values.name ?? optimisticProfile.name,
+        image: values.image ?? optimisticProfile.image,
+      });
 
-    const formData = new FormData();
-    if (values.name !== undefined) formData.set('name', values.name);
-    if (values.image !== undefined) formData.set('image', values.image ?? '');
+      const formData = new FormData();
+      if (values.name !== undefined) formData.set('name', values.name);
+      if (values.image !== undefined) formData.set('image', values.image ?? '');
 
-    const result = await updateProfileAction(serverState, formData);
+      startTransition(async () => {
+        const result = await updateProfileAction(serverState, formData);
 
-    if (result.success) {
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } else {
-      setSaveStatus('error');
-      if (result.errors) {
-        for (const [field, messages] of Object.entries(result.errors)) {
-          if (messages.length > 0) {
-            form.setError(field as keyof ProfileUpdateInput, {
-              type: 'server',
-              message: messages[0],
-            });
+        if (result.success) {
+          setSaveStatus('saved');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        } else {
+          setSaveStatus('error');
+          if (result.errors) {
+            for (const [field, messages] of Object.entries(result.errors)) {
+              if (messages.length > 0) {
+                form.setError(field as keyof ProfileUpdateInput, {
+                  type: 'server',
+                  message: messages[0],
+                });
+              }
+            }
           }
         }
-      }
-    }
+      });
+    });
   }
 
   return (

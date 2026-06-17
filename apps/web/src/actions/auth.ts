@@ -34,6 +34,7 @@ export async function loginAction(
     const result = await serverApiClient.post<LoginResponse>('/api/v1/auth/login', data);
     return { success: true, data: result };
   } catch (error) {
+    console.error('Login action error:', error);
     if (error instanceof ApiError) {
       return {
         success: false,
@@ -42,7 +43,7 @@ export async function loginAction(
     }
     return {
       success: false,
-      message: 'Unable to reach the server. Please try again.',
+      message: `Unable to reach the server. Please try again. Error: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }

@@ -1,6 +1,6 @@
 import { Module, type NestModule, type MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -42,6 +42,7 @@ import { TenantGuard } from './auth/guards/tenant.guard.js';
   controllers: [AppController],
   providers: [
     LoggerService,
+    Reflector,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

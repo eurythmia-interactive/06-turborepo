@@ -45,16 +45,9 @@ export function LoginForm() {
     }
   }, [state, form]);
 
-  async function onSubmit(data: LoginInput) {
-    const formData = new FormData();
-    formData.set('email', data.email);
-    formData.set('password', data.password);
-    await formAction(formData);
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form action={formAction} className="space-y-6" noValidate>
         <div className="space-y-4">
           <FormField
             control={form.control}
