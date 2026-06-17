@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["NODE_ENV", "CI"],
+  "globalEnv": ["NODE_ENV", "CI", "DATABASE_URL"],
   "globalDependencies": ["tsconfig.base.json", ".prettierrc", "eslint.config.js"],
   "tasks": {
     "build": {
@@ -24,7 +24,7 @@
     },
     "db:generate": {
       "cache": true,
-      "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json"],
+      "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json", ".env*"],
       "outputs": ["src/generated/**"]
     }
   }
