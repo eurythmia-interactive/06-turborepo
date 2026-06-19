@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AdminController } from './admin.controller.js';
 import { AdminService } from './admin.service.js';
+import { AuditService } from './services/audit.service.js';
 import { TenantAdminModule } from './tenant/tenant-admin.module.js';
 import { UserAdminModule } from './user/user-admin.module.js';
 import { RoleAdminModule } from './role/role-admin.module.js';
@@ -23,6 +24,7 @@ import { IpAllowlistController } from './controllers/ip-allowlist.controller.js'
   controllers: [AdminController, IpAllowlistController],
   providers: [
     AdminService,
+    AuditService,
     IpAllowlistService,
     {
       provide: APP_GUARD,
@@ -33,6 +35,6 @@ import { IpAllowlistController } from './controllers/ip-allowlist.controller.js'
       useClass: AdminThrottlerGuard,
     },
   ],
-  exports: [AdminService, IpAllowlistService],
+  exports: [AdminService, AuditService, IpAllowlistService],
 })
 export class AdminModule {}

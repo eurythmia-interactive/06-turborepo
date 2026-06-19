@@ -43,10 +43,18 @@ export {
 export {
   createTenantSchema,
   updateTenantSchema,
+  tenantListQuerySchema,
   tenantResponseSchema,
+  suspendTenantSchema,
+  tenantStatsResponseSchema,
+  PLAN_VALUES,
+  type Plan,
   type CreateTenantInput,
   type UpdateTenantInput,
+  type TenantListQuery,
   type TenantResponse,
+  type SuspendTenantInput,
+  type TenantStatsResponse,
 } from './admin/tenant.schema.js';
 
 export {

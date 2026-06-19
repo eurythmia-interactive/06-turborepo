@@ -39,6 +39,7 @@ async function main(): Promise<void> {
     create: {
       name: 'System Tenant',
       slug: 'system',
+      isSystem: true,
       users: {
         create: { userId: superAdmin.id },
       },
