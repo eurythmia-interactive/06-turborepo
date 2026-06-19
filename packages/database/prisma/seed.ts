@@ -2,8 +2,48 @@ import { hash } from 'argon2';
 import { AuthProviderType, Role, UserStatus, prisma } from '../src/index.ts';
 
 async function main(): Promise<void> {
+  const superAdminPassword = await hash('SuperAdmin123!');
   const adminPassword = await hash('Admin123!');
   const memberPassword = await hash('Member123!');
+
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'superadmin@example.com' },
+    update: {},
+    create: {
+      email: 'superadmin@example.com',
+      name: 'Super Admin',
+      role: Role.SUPER_ADMIN,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  await prisma.authenticationProvider.upsert({
+    where: {
+      type_providerUserId: {
+        type: AuthProviderType.LOCAL,
+        providerUserId: 'superadmin@example.com',
+      },
+    },
+    update: {},
+    create: {
+      userId: superAdmin.id,
+      type: AuthProviderType.LOCAL,
+      providerUserId: 'superadmin@example.com',
+      passwordHash: superAdminPassword,
+    },
+  });
+
+  await prisma.tenant.upsert({
+    where: { slug: 'system' },
+    update: {},
+    create: {
+      name: 'System Tenant',
+      slug: 'system',
+      users: {
+        create: { userId: superAdmin.id },
+      },
+    },
+  });
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
@@ -84,6 +124,7 @@ async function main(): Promise<void> {
   });
 
   process.stdout.write('Seeded users:\n');
+  process.stdout.write('  superadmin@example.com / SuperAdmin123! (SUPER_ADMIN)\n');
   process.stdout.write('  admin@example.com / Admin123! (ADMIN)\n');
   process.stdout.write('  member@example.com / Member123! (MEMBER)\n');
 }

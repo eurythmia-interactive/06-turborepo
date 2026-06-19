@@ -43,9 +43,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body(new ZodValidationPipe(loginSchema)) body: LoginInput,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.authService.login(body.email, body.password);
+    const ipAddress =
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      request.ip ||
+      'unknown';
+    const userAgent = request.headers['user-agent'] || 'unknown';
+
+    const result = await this.authService.login(body.email, body.password, ipAddress, userAgent);
     setRefreshTokenCookie(response, result.refreshToken, this.cookieConfig);
     return {
       accessToken: result.accessToken,

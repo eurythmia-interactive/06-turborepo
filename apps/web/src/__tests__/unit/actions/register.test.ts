@@ -7,6 +7,12 @@ vi.mock('@/lib/server-api-client', () => ({
   },
 }));
 
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(() => ({
+    set: vi.fn(),
+  })),
+}));
+
 import { serverApiClient } from '@/lib/server-api-client';
 import { ApiError } from '@/lib/api-client';
 

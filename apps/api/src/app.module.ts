@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UserModule } from './user/user.module.js';
 import { TenantModule } from './tenant/tenant.module.js';
+import { AdminModule } from './admin/admin.module.js';
 import { LoggerService } from './common/logger/logger.service.js';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware.js';
 import { validate } from './config/env.validation.js';
@@ -38,6 +39,7 @@ import { TenantGuard } from './auth/guards/tenant.guard.js';
     AuthModule,
     UserModule,
     TenantModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

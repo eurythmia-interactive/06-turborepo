@@ -62,8 +62,8 @@ describe('PermissionsGuard', () => {
         'tenant:read',
         'tenant:write',
         'tenant:delete',
-        'billing:read',
-        'billing:write',
+        'admin:access',
+        'system:config',
       ]);
       const context = createExecutionContext();
       mockRequest.user = {
@@ -116,10 +116,7 @@ describe('PermissionsGuard', () => {
     });
 
     it('should allow when user has all required permissions', () => {
-      (reflector.getAllAndOverride as ReturnType<typeof vi.fn>).mockReturnValue([
-        'user:read',
-        'tenant:read',
-      ]);
+      (reflector.getAllAndOverride as ReturnType<typeof vi.fn>).mockReturnValue(['user:read']);
       const context = createExecutionContext();
       mockRequest.user = {
         userId: 'u1',
@@ -179,8 +176,10 @@ describe('PermissionsGuard', () => {
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
 
-    it('should throw when ADMIN tries to delete tenants', () => {
-      (reflector.getAllAndOverride as ReturnType<typeof vi.fn>).mockReturnValue(['tenant:delete']);
+    it('should throw when ADMIN tries to impersonate users', () => {
+      (reflector.getAllAndOverride as ReturnType<typeof vi.fn>).mockReturnValue([
+        'user:impersonate',
+      ]);
       const context = createExecutionContext();
       mockRequest.user = {
         userId: 'u1',

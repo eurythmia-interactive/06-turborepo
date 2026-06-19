@@ -32,3 +32,57 @@ export {
   type RegisterInput,
   type RegisterResponse,
 } from './auth/register.schema.js';
+
+export {
+  Permissions,
+  AllPermissions,
+  RolePermissions,
+  type Permission,
+} from './admin/permissions.js';
+
+export {
+  createTenantSchema,
+  updateTenantSchema,
+  tenantResponseSchema,
+  type CreateTenantInput,
+  type UpdateTenantInput,
+  type TenantResponse,
+} from './admin/tenant.schema.js';
+
+export {
+  createUserSchema,
+  updateUserSchema,
+  userListQuerySchema,
+  userResponseSchema,
+  type CreateUserInput,
+  type UpdateUserInput,
+  type UserListQuery,
+  type UserResponse,
+} from './admin/user.schema.js';
+
+export {
+  createRoleSchema,
+  updateRoleSchema,
+  roleResponseSchema,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+  type RoleResponse,
+} from './admin/role.schema.js';
+
+export {
+  featureFlagSchema,
+  systemConfigSchema,
+  maintenanceSchema,
+  type FeatureFlagInput,
+  type SystemConfigInput,
+  type MaintenanceInput,
+} from './admin/system.schema.js';
+
+export {
+  auditLogQuerySchema,
+  auditLogResponseSchema,
+  type AuditLogQuery,
+  type AuditLogResponse,
+} from './admin/audit.schema.js';
+
+export { adminPasswordSchema, type AdminPasswordInput } from './admin/password.schema.js';

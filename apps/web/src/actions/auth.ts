@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { loginSchema, type LoginInput, type LoginResponse } from '@repo/shared';
 import { serverApiClient } from '@/lib/server-api-client';
 import { ApiError } from '@/lib/api-client';
@@ -32,6 +33,29 @@ export async function loginAction(
 
   try {
     const result = await serverApiClient.post<LoginResponse>('/api/v1/auth/login', data);
+
+    const cookieStore = await cookies();
+
+    cookieStore.set('access_token', result.accessToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60,
+    });
+
+    cookieStore.set('user_id', result.user.id, {
+      path: '/',
+    });
+
+    cookieStore.set('user_email', result.user.email, {
+      path: '/',
+    });
+
+    cookieStore.set('user_role', result.user.role, {
+      path: '/',
+    });
+
     return { success: true, data: result };
   } catch (error) {
     console.error('Login action error:', error);
@@ -45,5 +69,20 @@ export async function loginAction(
       success: false,
       message: `Unable to reach the server. Please try again. Error: ${error instanceof Error ? error.message : String(error)}`,
     };
+  }
+}
+
+export async function logoutAction(): Promise<void> {
+  const cookieStore = await cookies();
+
+  cookieStore.delete('access_token');
+  cookieStore.delete('user_id');
+  cookieStore.delete('user_email');
+  cookieStore.delete('user_role');
+
+  try {
+    await serverApiClient.post('/api/v1/auth/logout');
+  } catch (error) {
+    console.error('Logout API error:', error);
   }
 }

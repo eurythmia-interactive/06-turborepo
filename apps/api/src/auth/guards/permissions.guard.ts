@@ -6,25 +6,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { Role } from '@repo/database';
+import { RolePermissions } from '@repo/shared';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator.js';
+import { REQUIRE_ANY_PERMISSION_KEY } from '../decorators/require-any-permission.decorator.js';
 import type { AuthenticatedUser } from '../interfaces/token-payload.interface.js';
-
-const ROLE_PERMISSIONS: Record<Role, string[]> = {
-  SUPER_ADMIN: [
-    'user:read',
-    'user:write',
-    'user:delete',
-    'tenant:read',
-    'tenant:write',
-    'tenant:delete',
-    'billing:read',
-    'billing:write',
-  ],
-  ADMIN: ['user:read', 'user:write', 'user:delete', 'tenant:read', 'billing:read', 'billing:write'],
-  MEMBER: ['user:read', 'user:write', 'tenant:read'],
-  GUEST: ['user:read', 'tenant:read'],
-};
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -36,7 +21,15 @@ export class PermissionsGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (!requiredPermissions || requiredPermissions.length === 0) {
+    const requiredAnyPermissions = this.reflector.getAllAndOverride<string[]>(
+      REQUIRE_ANY_PERMISSION_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (
+      (!requiredPermissions || requiredPermissions.length === 0) &&
+      (!requiredAnyPermissions || requiredAnyPermissions.length === 0)
+    ) {
       return true;
     }
 
@@ -47,11 +40,24 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const userPermissions = ROLE_PERMISSIONS[user.role] ?? [];
-    const hasPermission = requiredPermissions.every((perm) => userPermissions.includes(perm));
+    const userPermissions = RolePermissions[user.role] ?? [];
 
-    if (!hasPermission) {
-      throw new ForbiddenException('Insufficient permissions');
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      const hasAllPermissions = requiredPermissions.every((perm) =>
+        userPermissions.includes(perm as never),
+      );
+      if (!hasAllPermissions) {
+        throw new ForbiddenException('Insufficient permissions');
+      }
+    }
+
+    if (requiredAnyPermissions && requiredAnyPermissions.length > 0) {
+      const hasAnyPermission = requiredAnyPermissions.some((perm) =>
+        userPermissions.includes(perm as never),
+      );
+      if (!hasAnyPermission) {
+        throw new ForbiddenException('Insufficient permissions');
+      }
     }
 
     return true;

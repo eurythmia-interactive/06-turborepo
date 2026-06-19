@@ -7,6 +7,12 @@ vi.mock('@/lib/server-api-client', () => ({
   },
 }));
 
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(() => ({
+    set: vi.fn(),
+  })),
+}));
+
 import { serverApiClient } from '@/lib/server-api-client';
 import { ApiError } from '@/lib/api-client';
 
@@ -115,6 +121,6 @@ describe('loginAction', () => {
     const result = await loginAction(null, formData);
 
     expect(result.success).toBe(false);
-    expect(result.message).toBe('Unable to reach the server. Please try again.');
+    expect(result.message).toContain('Unable to reach the server');
   });
 });

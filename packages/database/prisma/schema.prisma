@@ -36,9 +36,14 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  providers AuthenticationProvider[]
-  sessions  RefreshToken[]
-  tenants   UserTenant[]
+  providers      AuthenticationProvider[]
+  sessions       RefreshToken[]
+  tenants        UserTenant[]
+  auditLogs      AuditLog[]
+  systemConfigs  SystemConfig[]
+  featureFlags   FeatureFlag[]
+  apiKeys        ApiKey[]
+  invitations    UserInvitation[]       @relation("InvitedBy")
 }
 
 model Tenant {
@@ -48,7 +53,11 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users UserTenant[]
+  users        UserTenant[]
+  auditLogs    AuditLog[]
+  featureFlags FeatureFlag[]
+  apiKeys      ApiKey[]
+  invitations  UserInvitation[]
 }
 
 model UserTenant {
@@ -89,4 +98,86 @@ model RefreshToken {
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   replacedBy RefreshToken? @relation("ReplacedBy", fields: [replacedById], references: [id])
   replaces   RefreshToken? @relation("ReplacedBy")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String?
+  action    String
+  details   Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  updatedByUser User? @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  tenantId    String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  tenant        Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  updatedByUser User?   @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String
+  keyHash    String    @unique
+  tenantId   String?
+  userId     String?
+  permissions String[]
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revoked    Boolean   @default(false)
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+}
+
+model UserInvitation {
+  id         String    @id @default(cuid())
+  email      String
+  token      String    @unique
+  tenantId   String?
+  role       Role
+  invitedBy  String
+  acceptedAt DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+
+  tenant    Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  invitedByUser User @relation("InvitedBy", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([expiresAt])
 }

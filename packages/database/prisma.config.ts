@@ -1,6 +1,9 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, env } from 'prisma/config';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 

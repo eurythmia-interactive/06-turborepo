@@ -34,9 +34,14 @@ export { PrismaClient } from './generated/prisma/index.js';
 export { Prisma } from './generated/prisma/index.js';
 export { AuthProviderType, Role, UserStatus } from './generated/prisma/index.js';
 export type {
+  ApiKey,
+  AuditLog,
   AuthenticationProvider,
+  FeatureFlag,
   RefreshToken,
+  SystemConfig,
   Tenant,
   User,
+  UserInvitation,
   UserTenant,
 } from './generated/prisma/index.js';

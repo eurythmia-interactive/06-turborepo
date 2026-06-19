@@ -43,7 +43,12 @@ export class AuthService {
     return createHash('sha256').update(token).digest('hex');
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(
+    email: string,
+    password: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<LoginResult> {
     const provider = await this.prisma.authenticationProvider.findFirst({
       where: {
         type: AuthProviderType.LOCAL,
@@ -104,6 +109,25 @@ export class AuthService {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
+
+    const isAdmin = user.role === Role.SUPER_ADMIN || user.role === Role.ADMIN;
+
+    if (isAdmin) {
+      await this.prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          tenantId: defaultTenantId === 'none' ? null : defaultTenantId,
+          action: 'admin.login',
+          details: {
+            email: user.email,
+            role: user.role,
+            success: true,
+          },
+          ip: ipAddress,
+          userAgent,
+        },
+      });
+    }
 
     return {
       accessToken,
