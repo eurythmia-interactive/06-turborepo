@@ -27,23 +27,28 @@ enum Role {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  name      String?
-  image     String?
-  status    UserStatus @default(PENDING)
-  role      Role       @default(MEMBER)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  email       String     @unique
+  name        String?
+  image       String?
+  status      UserStatus @default(PENDING)
+  role        Role       @default(MEMBER)
+  isSystem    Boolean    @default(false)
+  lastLoginAt DateTime?
+  deletedAt   DateTime?
+  deletedBy   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  providers      AuthenticationProvider[]
-  sessions       RefreshToken[]
-  tenants        UserTenant[]
-  auditLogs      AuditLog[]
-  systemConfigs  SystemConfig[]
-  featureFlags   FeatureFlag[]
-  apiKeys        ApiKey[]
-  invitations    UserInvitation[]       @relation("InvitedBy")
+  providers           AuthenticationProvider[]
+  sessions            RefreshToken[]
+  tenants             UserTenant[]
+  auditLogs           AuditLog[]
+  systemConfigs       SystemConfig[]
+  featureFlags        FeatureFlag[]
+  apiKeys             ApiKey[]
+  invitations         UserInvitation[]       @relation("InvitedBy")
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Tenant {
@@ -69,6 +74,7 @@ model Tenant {
 model UserTenant {
   userId    String
   tenantId  String
+  role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -186,4 +192,18 @@ model UserInvitation {
 
   @@index([email])
   @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
 }

@@ -62,10 +62,20 @@ export {
   updateUserSchema,
   userListQuerySchema,
   userResponseSchema,
+  suspendUserSchema,
+  addToTenantSchema,
+  updateTenantRoleSchema,
+  bulkUserActionSchema,
+  bulkRoleAssignSchema,
   type CreateUserInput,
   type UpdateUserInput,
   type UserListQuery,
   type UserResponse,
+  type SuspendUserInput,
+  type AddToTenantInput,
+  type UpdateTenantRoleInput,
+  type BulkUserActionInput,
+  type BulkRoleAssignInput,
 } from './admin/user.schema.js';
 
 export {

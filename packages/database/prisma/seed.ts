@@ -14,6 +14,7 @@ async function main(): Promise<void> {
       name: 'Super Admin',
       role: Role.SUPER_ADMIN,
       status: UserStatus.ACTIVE,
+      isSystem: true,
     },
   });
 
