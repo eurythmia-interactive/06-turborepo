@@ -11,6 +11,9 @@ import { TenantModule } from './tenant/tenant.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { LoggerService } from './common/logger/logger.service.js';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware.js';
+import { MaintenanceMiddleware } from './admin/system/maintenance.middleware.js';
+import { EmailModule } from './common/email/email.module.js';
+import { PublicInvitationModule } from './invitation/invitation.module.js';
 import { validate } from './config/env.validation.js';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from './auth/guards/roles.guard.js';
@@ -42,6 +45,8 @@ import { PermissionModule } from './auth/permission.module.js';
     TenantModule,
     AdminModule,
     PermissionModule,
+    EmailModule,
+    PublicInvitationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -72,6 +77,7 @@ import { PermissionModule } from './auth/permission.module.js';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MaintenanceMiddleware).forRoutes('*');
     consumer.apply(RequestLoggerMiddleware).forRoutes('*');
   }
 }

@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/select';
 import { CreateUserDialog } from './create-user-dialog';
 import { UserActions } from './user-actions';
+import { ImpersonateButton } from './impersonate-button';
 import Link from 'next/link';
 
 const columnHelper = createColumnHelper<UserResponse>();
@@ -55,6 +56,7 @@ export function UserList() {
   const [actionType, setActionType] = useState<
     'suspend' | 'activate' | 'reset-password' | 'delete' | null
   >(null);
+  const [impersonateUser, setImpersonateUser] = useState<UserResponse | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const fetchUsers = useCallback(async () => {
@@ -223,6 +225,11 @@ export function UserList() {
               >
                 Reset Password
               </DropdownMenuItem>
+              {user.role !== 'SUPER_ADMIN' && (
+                <DropdownMenuItem onClick={() => setImpersonateUser(user)}>
+                  Impersonate
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => {
@@ -414,6 +421,10 @@ export function UserList() {
           }}
           onSuccess={fetchUsers}
         />
+      )}
+
+      {impersonateUser && (
+        <ImpersonateButton user={impersonateUser} onClose={() => setImpersonateUser(null)} />
       )}
     </div>
   );

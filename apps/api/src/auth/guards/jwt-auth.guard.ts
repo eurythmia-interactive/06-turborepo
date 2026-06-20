@@ -42,6 +42,8 @@ export class JwtAuthGuard implements CanActivate {
         role: payload.role,
         status: payload.status,
         customRoleId: payload.customRoleId,
+        impersonatedBy: payload.impersonatedBy,
+        isImpersonating: payload.isImpersonation,
       };
       request.user = user;
     } catch {

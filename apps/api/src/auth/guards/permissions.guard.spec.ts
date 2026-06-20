@@ -182,7 +182,7 @@ describe('PermissionsGuard', () => {
       await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
     });
 
-    it('should throw when ADMIN tries to impersonate users', async () => {
+    it('should throw when MEMBER tries to impersonate users', async () => {
       (reflector.getAllAndOverride as ReturnType<typeof vi.fn>).mockReturnValue([
         'user:impersonate',
       ]);
@@ -190,7 +190,7 @@ describe('PermissionsGuard', () => {
       mockRequest.user = {
         userId: 'u1',
         tenantId: 't1',
-        role: Role.ADMIN,
+        role: Role.MEMBER,
         status: UserStatus.ACTIVE,
       } satisfies AuthenticatedUser;
 

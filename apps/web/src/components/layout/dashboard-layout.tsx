@@ -18,6 +18,7 @@ import { Home, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { ImpersonationBanner } from '@/components/admin/impersonation-banner';
 
 const menuItems = [
   { title: 'Overview', href: '/dashboard', icon: Home },
@@ -65,6 +66,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full">
         <DashboardSidebar />
         <main className="flex-1 overflow-auto">
+          <ImpersonationBanner />
           <div className="container mx-auto p-6">
             <div className="mb-4 flex items-center justify-between">
               <SidebarTrigger />

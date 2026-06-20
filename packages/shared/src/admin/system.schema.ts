@@ -33,3 +33,10 @@ export const maintenanceSchema = z.object({
 });
 
 export type MaintenanceInput = z.infer<typeof maintenanceSchema>;
+
+export const enableMaintenanceSchema = z.object({
+  message: z.string().max(500, 'Message must be 500 characters or less').optional(),
+  scheduledEnd: z.string().datetime().optional(),
+});
+
+export type EnableMaintenanceInput = z.infer<typeof enableMaintenanceSchema>;

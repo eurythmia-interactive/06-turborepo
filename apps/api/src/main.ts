@@ -6,6 +6,7 @@ config({ path: resolve(process.cwd(), '../../.env') });
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe.js';
@@ -16,6 +17,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  app.use(helmet());
   app.use(cookieParser());
 
   const corsOrigins = configService.get<string[]>('CORS_ORIGINS', []);

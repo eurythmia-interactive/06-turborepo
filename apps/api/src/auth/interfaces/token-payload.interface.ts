@@ -6,6 +6,8 @@ export interface AccessTokenPayload {
   role: Role;
   status: UserStatus;
   customRoleId?: string;
+  impersonatedBy?: string;
+  isImpersonation?: boolean;
   iat: number;
   exp: number;
 }
@@ -24,4 +26,6 @@ export interface AuthenticatedUser {
   role: Role;
   status: UserStatus;
   customRoleId?: string;
+  impersonatedBy?: string;
+  isImpersonating?: boolean;
 }

@@ -9,10 +9,12 @@ import {
   SidebarMenuButton,
   SidebarProvider,
 } from '@/components/ui/sidebar';
-import { Home, Key, Shield, Users, FileText, Monitor } from 'lucide-react';
+import { Home, Key, Shield, Users, FileText, Monitor, Settings, Mail } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SessionTimeoutWarning } from './session-timeout-warning';
+import { MaintenanceToggle } from './maintenance-toggle';
+import { ImpersonationBanner } from './impersonation-banner';
 
 const adminMenuItems = [
   { title: 'Dashboard', href: '/admin', icon: Home },
@@ -21,6 +23,8 @@ const adminMenuItems = [
   { title: 'Roles', href: '/admin/roles', icon: Key },
   { title: 'Audit Logs', href: '/admin/audit', icon: FileText },
   { title: 'Sessions', href: '/admin/sessions', icon: Monitor },
+  { title: 'Invitations', href: '/admin/invitations', icon: Mail },
+  { title: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
@@ -50,7 +54,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </SidebarContent>
         </Sidebar>
         <main className="flex-1 p-6">
+          <ImpersonationBanner />
           <SessionTimeoutWarning />
+          <div className="mb-6">
+            <MaintenanceToggle />
+          </div>
           {children}
         </main>
       </div>

@@ -1,5 +1,6 @@
 import { PrismaClient, Role, UserStatus, AuthProviderType } from '@repo/database';
 import { randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 
 export interface TestUser {
   id: string;
@@ -92,4 +93,31 @@ export async function createTestTenant(
   });
 
   return tenant;
+}
+
+export async function createTestInvitation(
+  prisma: PrismaClient,
+  invitedBy: string,
+  options: {
+    email?: string;
+    tenantId?: string;
+    role?: Role;
+    expiresAt?: Date;
+    acceptedAt?: Date | null;
+  } = {},
+) {
+  const token = randomBytes(32).toString('hex');
+  const invitation = await prisma.userInvitation.create({
+    data: {
+      email: options.email ?? `invite-${randomUUID()}@example.com`,
+      token,
+      tenantId: options.tenantId ?? null,
+      role: options.role ?? Role.MEMBER,
+      invitedBy,
+      expiresAt: options.expiresAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      acceptedAt: options.acceptedAt ?? null,
+    },
+  });
+
+  return invitation;
 }

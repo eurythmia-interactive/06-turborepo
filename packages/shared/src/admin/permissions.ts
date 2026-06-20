@@ -42,6 +42,7 @@ export const RolePermissions: Record<string, Permission[]> = {
     Permissions.USER_DELETE,
     Permissions.USER_SUSPEND,
     Permissions.USER_RESET_PASSWORD,
+    Permissions.USER_IMPERSONATE,
     Permissions.ROLE_READ,
     Permissions.ROLE_WRITE,
     Permissions.ROLE_DELETE,

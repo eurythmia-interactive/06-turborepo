@@ -70,6 +70,84 @@ export const handlers = [
   http.get(`${API_BASE}/api/v1/health`, () => {
     return HttpResponse.json({ status: 'ok' });
   }),
+
+  // Maintenance endpoints
+  http.get(`${API_BASE}/api/v1/admin/system/maintenance/status`, () => {
+    return HttpResponse.json({
+      enabled: false,
+      message: null,
+      scheduledEnd: null,
+    });
+  }),
+
+  http.post(`${API_BASE}/api/v1/admin/system/maintenance/enable`, async ({ request }) => {
+    const body = (await request.json()) as { message?: string; scheduledEnd?: string };
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post(`${API_BASE}/api/v1/admin/system/maintenance/disable`, () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Impersonation endpoints
+  http.post(`${API_BASE}/api/v1/admin/impersonation/start`, async ({ request }) => {
+    const body = (await request.json()) as { userId: string; reason: string };
+    return HttpResponse.json({
+      accessToken: 'impersonation-token',
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE}/api/v1/admin/impersonation/stop`, () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.get(`${API_BASE}/api/v1/admin/impersonation/status`, () => {
+    return HttpResponse.json({
+      isImpersonating: false,
+    });
+  }),
+
+  // Invitation endpoints
+  http.post(`${API_BASE}/api/v1/admin/invitations`, async ({ request }) => {
+    const body = (await request.json()) as { email: string; tenantId?: string; role: string };
+    return HttpResponse.json({
+      id: 'inv-123',
+      email: body.email,
+      tenantId: body.tenantId ?? null,
+      role: body.role,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      acceptedAt: null,
+    });
+  }),
+
+  http.get(`${API_BASE}/api/v1/admin/invitations`, () => {
+    return HttpResponse.json([]);
+  }),
+
+  http.post(`${API_BASE}/api/v1/admin/invitations/:id/resend`, () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.delete(`${API_BASE}/api/v1/admin/invitations/:id`, () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.get(`${API_BASE}/api/v1/invitations/:token`, ({ params }) => {
+    return HttpResponse.json({
+      email: 'user@example.com',
+      tenantName: 'Test Tenant',
+      role: 'MEMBER',
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'pending',
+    });
+  }),
+
+  http.post(`${API_BASE}/api/v1/invitations/:token/accept`, () => {
+    return HttpResponse.json({ success: true });
+  }),
 ];
 
 export const delayedHandlers = [

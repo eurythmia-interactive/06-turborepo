@@ -11,10 +11,13 @@ import { AuditAdminModule } from './audit/audit-admin.module.js';
 import { SessionAdminModule } from './session/session-admin.module.js';
 import { SystemAdminModule } from './system/system-admin.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
+import { ImpersonationModule } from './impersonation/impersonation.module.js';
+import { InvitationModule } from './invitation/invitation.module.js';
 import { AdminThrottlerGuard } from './admin.throttler.js';
 import { IpAllowlistService } from './services/ip-allowlist.service.js';
 import { IpAllowlistGuard } from './guards/ip-allowlist.guard.js';
 import { IpAllowlistController } from './controllers/ip-allowlist.controller.js';
+import { MaintenanceMiddleware } from './system/maintenance.middleware.js';
 
 @Module({
   imports: [
@@ -26,6 +29,8 @@ import { IpAllowlistController } from './controllers/ip-allowlist.controller.js'
     forwardRef(() => SessionAdminModule),
     AuditAdminModule,
     SystemAdminModule,
+    ImpersonationModule,
+    InvitationModule,
   ],
   controllers: [AdminController, IpAllowlistController],
   providers: [
@@ -41,6 +46,6 @@ import { IpAllowlistController } from './controllers/ip-allowlist.controller.js'
       useClass: AdminThrottlerGuard,
     },
   ],
-  exports: [AdminService, AuditService, IpAllowlistService],
+  exports: [AdminService, AuditService, IpAllowlistService, MaintenanceMiddleware],
 })
 export class AdminModule {}
