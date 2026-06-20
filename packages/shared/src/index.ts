@@ -81,10 +81,16 @@ export {
 export {
   createRoleSchema,
   updateRoleSchema,
+  roleListQuerySchema,
   roleResponseSchema,
+  roleDetailResponseSchema,
+  assignPermissionsSchema,
   type CreateRoleInput,
   type UpdateRoleInput,
+  type RoleListQuery,
   type RoleResponse,
+  type RoleDetailResponse,
+  type AssignPermissionsInput,
 } from './admin/role.schema.js';
 
 export {
@@ -104,3 +110,29 @@ export {
 } from './admin/audit.schema.js';
 
 export { adminPasswordSchema, type AdminPasswordInput } from './admin/password.schema.js';
+
+export {
+  timeRangeSchema,
+  periodSchema,
+  dashboardMetricsQuerySchema,
+  dashboardMetricsResponseSchema,
+  growthQuerySchema,
+  growthDataPointSchema,
+  growthResponseSchema,
+  activityQuerySchema,
+  activityDataPointSchema,
+  activityResponseSchema,
+  recentActivityQuerySchema,
+  recentActivityEventSchema,
+  recentActivityResponseSchema,
+  type TimeRange,
+  type Period,
+  type DashboardMetricsQuery,
+  type DashboardMetricsResponse,
+  type GrowthQuery,
+  type GrowthResponse,
+  type ActivityQuery,
+  type ActivityResponse,
+  type RecentActivityQuery,
+  type RecentActivityResponse,
+} from './admin/dashboard.schema.js';

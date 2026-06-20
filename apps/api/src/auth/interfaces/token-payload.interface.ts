@@ -5,6 +5,7 @@ export interface AccessTokenPayload {
   tenantId: string;
   role: Role;
   status: UserStatus;
+  customRoleId?: string;
   iat: number;
   exp: number;
 }
@@ -22,4 +23,5 @@ export interface AuthenticatedUser {
   tenantId: string;
   role: Role;
   status: UserStatus;
+  customRoleId?: string;
 }

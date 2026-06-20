@@ -253,6 +253,7 @@ describe('AuthService', () => {
         'none',
         Role.MEMBER,
         UserStatus.ACTIVE,
+        undefined,
       );
     });
   });
@@ -505,6 +506,7 @@ describe('AuthService', () => {
         'tenant-1',
         Role.MEMBER,
         UserStatus.ACTIVE,
+        undefined,
       );
     });
 
@@ -521,6 +523,7 @@ describe('AuthService', () => {
         'none',
         Role.MEMBER,
         UserStatus.ACTIVE,
+        undefined,
       );
     });
   });
@@ -711,6 +714,7 @@ describe('AuthService', () => {
         'tenant-2',
         Role.MEMBER,
         UserStatus.ACTIVE,
+        undefined,
       );
     });
 

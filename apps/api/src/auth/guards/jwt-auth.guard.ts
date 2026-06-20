@@ -41,6 +41,7 @@ export class JwtAuthGuard implements CanActivate {
         tenantId: payload.tenantId,
         role: payload.role,
         status: payload.status,
+        customRoleId: payload.customRoleId,
       };
       request.user = user;
     } catch {

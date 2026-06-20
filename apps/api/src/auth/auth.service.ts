@@ -95,6 +95,7 @@ export class AuthService {
       defaultTenantId,
       user.role,
       user.status,
+      user.customRoleId ?? undefined,
     );
 
     const refreshData = this.tokenPayloadFactory.createRefreshTokenData();
@@ -108,11 +109,6 @@ export class AuthService {
         familyId: refreshData.familyId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
-    });
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
     });
 
     const isAdmin = user.role === Role.SUPER_ADMIN || user.role === Role.ADMIN;
@@ -299,6 +295,7 @@ export class AuthService {
       tenantId,
       user.role,
       user.status,
+      user.customRoleId ?? undefined,
     );
 
     return {
@@ -389,6 +386,7 @@ export class AuthService {
         tenantId,
         user.role,
         user.status,
+        user.customRoleId ?? undefined,
       );
       return { accessToken };
     }
@@ -411,6 +409,7 @@ export class AuthService {
       tenantId,
       user.role,
       user.status,
+      user.customRoleId ?? undefined,
     );
 
     return { accessToken };

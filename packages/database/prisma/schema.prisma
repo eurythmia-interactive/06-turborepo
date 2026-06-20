@@ -27,18 +27,19 @@ enum Role {
 }
 
 model User {
-  id          String     @id @default(cuid())
-  email       String     @unique
-  name        String?
-  image       String?
-  status      UserStatus @default(PENDING)
-  role        Role       @default(MEMBER)
-  isSystem    Boolean    @default(false)
-  lastLoginAt DateTime?
-  deletedAt   DateTime?
-  deletedBy   String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id             String      @id @default(cuid())
+  email          String      @unique
+  name           String?
+  image          String?
+  status         UserStatus  @default(PENDING)
+  role           Role        @default(MEMBER)
+  customRoleId   String?
+  isSystem       Boolean     @default(false)
+  lastLoginAt    DateTime?
+  deletedAt      DateTime?
+  deletedBy      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   providers           AuthenticationProvider[]
   sessions            RefreshToken[]
@@ -49,6 +50,7 @@ model User {
   apiKeys             ApiKey[]
   invitations         UserInvitation[]       @relation("InvitedBy")
   passwordResetTokens PasswordResetToken[]
+  customRole          CustomRole?            @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
 }
 
 model Tenant {
@@ -72,15 +74,30 @@ model Tenant {
 }
 
 model UserTenant {
-  userId    String
-  tenantId  String
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
+  userId       String
+  tenantId     String
+  role         Role      @default(MEMBER)
+  customRoleId String?
+  createdAt    DateTime  @default(now())
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customRole CustomRole? @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
 
   @@id([userId, tenantId])
+}
+
+model CustomRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[]
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  userTenants UserTenant[]
 }
 
 model AuthenticationProvider {

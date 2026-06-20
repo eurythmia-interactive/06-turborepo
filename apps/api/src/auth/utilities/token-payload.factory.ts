@@ -17,6 +17,7 @@ export class TokenPayloadFactory {
     tenantId: string,
     role: Role,
     status: UserStatus,
+    customRoleId?: string,
   ): Promise<string> {
     const config = this.jwtConfigService.get();
     const payload: Omit<AccessTokenPayload, 'iat' | 'exp'> = {
@@ -24,6 +25,7 @@ export class TokenPayloadFactory {
       tenantId,
       role,
       status,
+      ...(customRoleId && { customRoleId }),
     };
 
     if (config.algorithm === 'RS256') {

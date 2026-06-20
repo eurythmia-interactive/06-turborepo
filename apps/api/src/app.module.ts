@@ -16,6 +16,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from './auth/guards/roles.guard.js';
 import { PermissionsGuard } from './auth/guards/permissions.guard.js';
 import { TenantGuard } from './auth/guards/tenant.guard.js';
+import { PermissionModule } from './auth/permission.module.js';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { TenantGuard } from './auth/guards/tenant.guard.js';
     UserModule,
     TenantModule,
     AdminModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [
