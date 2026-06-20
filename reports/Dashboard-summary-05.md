@@ -507,3 +507,93 @@ The implementation follows best practices:
 - [x] Error handling works
 
 **All checks passed! ✅**
+
+---
+
+## Post-Implementation: Testing & Verification Session
+
+### Date: June 19, 2026
+
+A comprehensive testing session was conducted after the initial implementation. This covered unit tests for all new backend services, server action tests for the frontend, and manual endpoint verification against a running API server.
+
+---
+
+### New Unit Tests Added (50 total)
+
+**API Tests (37 new across 4 files):**
+
+| Test File                             | Tests | Coverage                                                                                 |
+| ------------------------------------- | ----- | ---------------------------------------------------------------------------------------- |
+| `dashboard-cache.service.spec.ts`     | 17    | get/set, TTL expiration, invalidate, invalidatePattern, clear, size                      |
+| `metrics-aggregation.service.spec.ts` | 8     | calculateGrowthRate, cache hit/miss, full metrics aggregation with mocked Prisma         |
+| `user-growth.service.spec.ts`         | 6     | Cache hit/miss, daily bucketing, missing date fill, cumulative totals, growth rates      |
+| `tenant-activity.service.spec.ts`     | 6     | Cache hit/miss, session activity, user activity, default/custom limits, peak calculation |
+
+**Web Tests (13 new in 1 file):**
+
+| Test File                   | Tests | Coverage                                                                |
+| --------------------------- | ----- | ----------------------------------------------------------------------- |
+| `actions/dashboard.test.ts` | 13    | All 4 server actions: success responses, default params, error handling |
+
+---
+
+### Updated Test Results
+
+| Package    | Tests             | Files   | Duration |
+| ---------- | ----------------- | ------- | -------- |
+| **API**    | 262 passing (+37) | 20 (+4) | 4.40s    |
+| **Web**    | 98 passing (+13)  | 13 (+1) | 8.58s    |
+| **Shared** | 27 passing        | 4       | 638ms    |
+
+---
+
+### Manual Endpoint Verification
+
+All 4 dashboard endpoints were tested against a running API server with real database data:
+
+| Endpoint                                                      | Status | Sample Response                                      |
+| ------------------------------------------------------------- | ------ | ---------------------------------------------------- |
+| `GET /admin/dashboard/metrics?timeRange=month`                | ✅ 200 | 3 users, 3 tenants, 2 active tenants today           |
+| `GET /admin/dashboard/growth?metric=users&period=day&limit=7` | ✅ 200 | 7 data points, 3 total new users, peak on 2026-06-17 |
+| `GET /admin/dashboard/activity?type=sessions&period=day`      | ✅ 200 | 24 hourly buckets, correct labels                    |
+| `GET /admin/dashboard/recent?limit=5`                         | ✅ 200 | 4 events with user/tenant details, relative timeAgo  |
+
+---
+
+### Bug Fixed During Testing
+
+**Issue:** API server failed to start with `UnknownDependenciesException`:
+
+```
+Nest can't resolve dependencies of the JwtAuthGuard (Reflector, ?).
+Please make sure that the argument TokenPayloadFactory at index [1]
+is available in the AnalyticsModule module.
+```
+
+**Root Cause:** `AnalyticsModule` only imported `AdminModule`, but the `JwtAuthGuard` used by `AnalyticsController` requires `TokenPayloadFactory` from `AuthModule`.
+
+**Fix:** Added `forwardRef(() => AuthModule)` to `AnalyticsModule` imports, matching the pattern used by other admin sub-modules (e.g., `TenantAdminModule`).
+
+**File Modified:** `apps/api/src/admin/analytics/analytics.module.ts`
+
+---
+
+### Build Verification
+
+- ✅ Shared package builds successfully
+- ✅ API package typechecks with 0 errors
+- ✅ Web package builds (Next.js production build, all pages generated)
+- ✅ API server starts and all 4 dashboard routes are mapped
+- ✅ All routes protected by JWT + Roles + Permissions guards
+
+---
+
+### Test Session Conclusion
+
+All Phase 5 features verified working end-to-end:
+
+- ✅ 50 new unit tests passing (37 API + 13 Web)
+- ✅ 4 API endpoints return correct data from live server
+- ✅ DI dependency issue caught and fixed
+- ✅ All existing tests still pass (no regressions)
+- ✅ Production build succeeds

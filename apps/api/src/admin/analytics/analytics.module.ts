@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AdminModule } from '../admin.module.js';
+import { AuthModule } from '../../auth/auth.module.js';
 import { AnalyticsController } from './analytics.controller.js';
 import { MetricsAggregationService } from './metrics-aggregation.service.js';
 import { UserGrowthService } from './user-growth.service.js';
@@ -7,7 +8,7 @@ import { TenantActivityService } from './tenant-activity.service.js';
 import { DashboardCacheService } from './dashboard-cache.service.js';
 
 @Module({
-  imports: [forwardRef(() => AdminModule)],
+  imports: [forwardRef(() => AdminModule), forwardRef(() => AuthModule)],
   controllers: [AnalyticsController],
   providers: [
     MetricsAggregationService,
