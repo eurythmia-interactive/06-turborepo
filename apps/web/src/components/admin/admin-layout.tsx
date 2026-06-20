@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarProvider,
 } from '@/components/ui/sidebar';
-import { Home, Key, Shield, Users } from 'lucide-react';
+import { Home, Key, Shield, Users, FileText, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { SessionTimeoutWarning } from './session-timeout-warning';
@@ -19,6 +19,8 @@ const adminMenuItems = [
   { title: 'Users', href: '/admin/users', icon: Users },
   { title: 'Tenants', href: '/admin/tenants', icon: Shield },
   { title: 'Roles', href: '/admin/roles', icon: Key },
+  { title: 'Audit Logs', href: '/admin/audit', icon: FileText },
+  { title: 'Sessions', href: '/admin/sessions', icon: Monitor },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {

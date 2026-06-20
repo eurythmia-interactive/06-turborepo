@@ -8,6 +8,7 @@ import { TenantAdminModule } from './tenant/tenant-admin.module.js';
 import { UserAdminModule } from './user/user-admin.module.js';
 import { RoleAdminModule } from './role/role-admin.module.js';
 import { AuditAdminModule } from './audit/audit-admin.module.js';
+import { SessionAdminModule } from './session/session-admin.module.js';
 import { SystemAdminModule } from './system/system-admin.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AdminThrottlerGuard } from './admin.throttler.js';
@@ -22,6 +23,7 @@ import { IpAllowlistController } from './controllers/ip-allowlist.controller.js'
     forwardRef(() => UserAdminModule),
     forwardRef(() => RoleAdminModule),
     forwardRef(() => AnalyticsModule),
+    forwardRef(() => SessionAdminModule),
     AuditAdminModule,
     SystemAdminModule,
   ],

@@ -105,9 +105,34 @@ export {
 export {
   auditLogQuerySchema,
   auditLogResponseSchema,
+  auditLogDetailResponseSchema,
+  auditSummaryQuerySchema,
+  auditSummaryResponseSchema,
+  auditExportQuerySchema,
   type AuditLogQuery,
   type AuditLogResponse,
+  type AuditLogDetailResponse,
+  type AuditSummaryQuery,
+  type AuditSummaryResponse,
+  type AuditExportQuery,
 } from './admin/audit.schema.js';
+
+export {
+  sessionStatusSchema,
+  sessionListQuerySchema,
+  deviceInfoSchema,
+  sessionResponseSchema,
+  sessionListResponseSchema,
+  revokeSessionResponseSchema,
+  revokeAllSessionsResponseSchema,
+  type SessionStatus,
+  type SessionListQuery,
+  type DeviceInfo,
+  type SessionResponse,
+  type SessionListResponse,
+  type RevokeSessionResponse,
+  type RevokeAllSessionsResponse,
+} from './admin/session.schema.js';
 
 export { adminPasswordSchema, type AdminPasswordInput } from './admin/password.schema.js';
 

@@ -121,6 +121,8 @@ model RefreshToken {
   familyId     String
   replacedById String?   @unique
   revoked      Boolean   @default(false)
+  ip           String?
+  userAgent    String?
   expiresAt    DateTime
   createdAt    DateTime  @default(now())
 

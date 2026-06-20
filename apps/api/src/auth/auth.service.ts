@@ -12,6 +12,7 @@ import { AuthProviderType, type PrismaClient, Role, UserStatus } from '@repo/dat
 import { PRISMA_CLIENT } from '../database/database.module.js';
 import { TokenPayloadFactory } from './utilities/token-payload.factory.js';
 import { JwtConfigService } from './config/jwt-config.service.js';
+import { AuditService } from '../admin/services/audit.service.js';
 import type { RegisterInput, ProfileUpdateInput } from '@repo/shared';
 
 interface LoginResult {
@@ -37,6 +38,7 @@ export class AuthService {
     @Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient,
     private readonly tokenPayloadFactory: TokenPayloadFactory,
     private readonly jwtConfigService: JwtConfigService,
+    private readonly auditService: AuditService,
   ) {}
 
   private hashToken(token: string): string {
@@ -107,6 +109,8 @@ export class AuthService {
         userId: user.id,
         tokenHash,
         familyId: refreshData.familyId,
+        ip: ipAddress ?? null,
+        userAgent: userAgent ?? null,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
@@ -114,19 +118,17 @@ export class AuthService {
     const isAdmin = user.role === Role.SUPER_ADMIN || user.role === Role.ADMIN;
 
     if (isAdmin) {
-      await this.prisma.auditLog.create({
-        data: {
-          userId: user.id,
-          tenantId: defaultTenantId === 'none' ? null : defaultTenantId,
-          action: 'admin.login',
-          details: {
-            email: user.email,
-            role: user.role,
-            success: true,
-          },
-          ip: ipAddress,
-          userAgent,
+      await this.auditService.log({
+        userId: user.id,
+        tenantId: defaultTenantId === 'none' ? null : defaultTenantId,
+        action: 'admin.login',
+        details: {
+          email: user.email,
+          role: user.role,
+          success: true,
         },
+        ip: ipAddress,
+        userAgent,
       });
     }
 
@@ -143,7 +145,11 @@ export class AuthService {
     };
   }
 
-  async register(input: RegisterInput): Promise<LoginResult> {
+  async register(
+    input: RegisterInput,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<LoginResult> {
     const existing = await this.prisma.authenticationProvider.findFirst({
       where: {
         type: AuthProviderType.LOCAL,
@@ -204,6 +210,8 @@ export class AuthService {
         userId: user.id,
         tokenHash,
         familyId: refreshData.familyId,
+        ip: ipAddress ?? null,
+        userAgent: userAgent ?? null,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
@@ -221,7 +229,11 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(rawRefreshToken: string): Promise<TokenPair> {
+  async refreshTokens(
+    rawRefreshToken: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<TokenPair> {
     const tokenHash = this.hashToken(rawRefreshToken);
 
     const existingToken = await this.prisma.refreshToken.findUnique({
@@ -278,6 +290,8 @@ export class AuthService {
         userId: existingToken.userId,
         tokenHash: newTokenHash,
         familyId: newFamilyId,
+        ip: ipAddress ?? null,
+        userAgent: userAgent ?? null,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });

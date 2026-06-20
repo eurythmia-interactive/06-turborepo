@@ -16,6 +16,7 @@ import { AuthProviderType, Role, UserStatus } from '@repo/database';
 import { AuthService } from './auth.service.js';
 import { type TokenPayloadFactory } from './utilities/token-payload.factory.js';
 import { type JwtConfigService } from './config/jwt-config.service.js';
+import { type AuditService } from '../admin/services/audit.service.js';
 
 vi.mock('argon2', () => ({
   hash: vi.fn().mockResolvedValue('hashed-value'),
@@ -56,6 +57,7 @@ describe('AuthService', () => {
   };
   let tokenPayloadFactory: TokenPayloadFactory;
   let jwtConfigService: JwtConfigService;
+  let auditService: AuditService;
 
   const mockUser = {
     id: 'user-1',
@@ -130,7 +132,11 @@ describe('AuthService', () => {
       }),
     } as unknown as JwtConfigService;
 
-    service = new AuthService(prisma as never, tokenPayloadFactory, jwtConfigService);
+    auditService = {
+      log: vi.fn().mockResolvedValue(undefined),
+    } as unknown as AuditService;
+
+    service = new AuthService(prisma as never, tokenPayloadFactory, jwtConfigService, auditService);
   });
 
   describe('login', () => {
