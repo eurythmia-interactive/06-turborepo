@@ -8,7 +8,7 @@ import { AuditService } from '../services/audit.service.js';
 @Module({
   imports: [forwardRef(() => AdminModule)],
   controllers: [MaintenanceController],
-  providers: [MaintenanceService, AuditService],
+  providers: [MaintenanceService, MaintenanceMiddleware, AuditService],
   exports: [MaintenanceService, MaintenanceMiddleware],
 })
 export class SystemAdminModule {}

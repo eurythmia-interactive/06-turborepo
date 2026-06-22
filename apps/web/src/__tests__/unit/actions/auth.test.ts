@@ -13,6 +13,14 @@ vi.mock('next/headers', () => ({
   })),
 }));
 
+const mockRedirect = vi.fn();
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => {
+    mockRedirect(url);
+    throw new Error('NEXT_REDIRECT');
+  },
+}));
+
 import { serverApiClient } from '@/lib/server-api-client';
 import { ApiError } from '@/lib/api-client';
 
@@ -56,19 +64,23 @@ describe('loginAction', () => {
     formData.append('email', 'test@example.com');
     formData.append('password', 'password123');
 
-    const result = await loginAction(null, formData);
+    try {
+      await loginAction(null, formData);
+    } catch (error) {
+      expect((error as Error).message).toBe('NEXT_REDIRECT');
+    }
 
-    expect(result.success).toBe(true);
     expect(mockPost).toHaveBeenCalledWith('/api/v1/auth/login', {
       email: 'test@example.com',
       password: 'password123',
     });
+    expect(mockRedirect).toHaveBeenCalledWith('/dashboard');
   });
 
   it('returns success with data on valid login', async () => {
     const mockResponse = {
       accessToken: 'valid-token',
-      user: { id: '1', email: 'test@example.com', name: 'Test', role: 'user' },
+      user: { id: '1', email: 'test@example.com', name: 'Test', role: 'MEMBER' },
       tenants: [{ id: 't1', name: 'Tenant', slug: 'tenant' }],
     };
     mockPost.mockResolvedValue(mockResponse);
@@ -77,10 +89,13 @@ describe('loginAction', () => {
     formData.append('email', 'test@example.com');
     formData.append('password', 'password123');
 
-    const result = await loginAction(null, formData);
+    try {
+      await loginAction(null, formData);
+    } catch (error) {
+      expect((error as Error).message).toBe('NEXT_REDIRECT');
+    }
 
-    expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockResponse);
+    expect(mockRedirect).toHaveBeenCalledWith('/dashboard');
   });
 
   it('returns error message on 401', async () => {

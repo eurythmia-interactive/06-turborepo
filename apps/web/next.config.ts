@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   output: 'standalone',
 
+  transpilePackages: ['@repo/shared'],
+
   webpack: (config, { isServer }) => {
     config.resolve.extensionAlias = {
       '.js': ['.ts', '.tsx', '.js'],

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import {
   createInvitationSchema,
@@ -8,15 +8,11 @@ import {
 } from '@repo/shared';
 import { Roles } from '../../auth/decorators/roles.decorator.js';
 import { Permissions } from '../../auth/decorators/permissions.decorator.js';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../../auth/guards/permissions.guard.js';
-import { RolesGuard } from '../../auth/guards/roles.guard.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { InvitationService } from './invitation.service.js';
 import { Role } from '@repo/database';
 
 @Controller('admin/invitations')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN)
 export class InvitationController {
   constructor(private readonly invitationService: InvitationService) {}

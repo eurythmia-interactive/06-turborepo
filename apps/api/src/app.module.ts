@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { UserModule } from './user/user.module.js';
 import { TenantModule } from './tenant/tenant.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { SystemAdminModule } from './admin/system/system-admin.module.js';
 import { LoggerService } from './common/logger/logger.service.js';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware.js';
 import { MaintenanceMiddleware } from './admin/system/maintenance.middleware.js';
@@ -44,6 +45,7 @@ import { PermissionModule } from './auth/permission.module.js';
     UserModule,
     TenantModule,
     AdminModule,
+    SystemAdminModule,
     PermissionModule,
     EmailModule,
     PublicInvitationModule,

@@ -21,8 +21,9 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createTenantAction } from '@/actions/tenants';
-import { PLAN_VALUES } from '@repo/shared';
 import { toast } from 'sonner';
+
+const PLAN_VALUES = ['free', 'pro', 'enterprise'] as const;
 
 interface CreateTenantDialogProps {
   open: boolean;

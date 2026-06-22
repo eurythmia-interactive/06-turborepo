@@ -47,8 +47,6 @@ export {
   tenantResponseSchema,
   suspendTenantSchema,
   tenantStatsResponseSchema,
-  PLAN_VALUES,
-  type Plan,
   type CreateTenantInput,
   type UpdateTenantInput,
   type TenantListQuery,
@@ -56,6 +54,7 @@ export {
   type SuspendTenantInput,
   type TenantStatsResponse,
 } from './admin/tenant.schema.js';
+export { PLAN_VALUES, type Plan } from './admin/tenant.schema.js';
 
 export {
   createUserSchema,

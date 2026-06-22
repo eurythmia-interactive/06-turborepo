@@ -1,18 +1,14 @@
-import { Controller, Get, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { enableMaintenanceSchema } from '@repo/shared';
 import { Roles } from '../../auth/decorators/roles.decorator.js';
 import { Permissions } from '../../auth/decorators/permissions.decorator.js';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../../auth/guards/permissions.guard.js';
-import { RolesGuard } from '../../auth/guards/roles.guard.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { MaintenanceService } from './maintenance.service.js';
 import { Role } from '@repo/database';
 import type { EnableMaintenanceInput } from '@repo/shared';
 
 @Controller('admin/system/maintenance')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.SUPER_ADMIN)
 export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}

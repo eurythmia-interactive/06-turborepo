@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { loginSchema, type LoginInput, type LoginResponse } from '@repo/shared';
 import { serverApiClient } from '@/lib/server-api-client';
 import { ApiError } from '@/lib/api-client';
@@ -56,8 +57,19 @@ export async function loginAction(
       path: '/',
     });
 
-    return { success: true, data: result };
+    // Redirect based on role - this ensures cookies are sent with the redirect
+    const role = result.user.role;
+    if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
+      redirect('/admin');
+    } else {
+      redirect('/dashboard');
+    }
   } catch (error) {
+    // Handle redirect errors separately
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
+
     console.error('Login action error:', error);
     if (error instanceof ApiError) {
       return {

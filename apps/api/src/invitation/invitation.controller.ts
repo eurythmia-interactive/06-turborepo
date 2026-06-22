@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Param, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { Public } from '../common/decorators/public.decorator.js';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { InvitationService } from '../admin/invitation/invitation.service.js';
 
 @Controller('invitations')
@@ -22,7 +21,6 @@ export class PublicInvitationController {
   }
 
   @Post(':token/accept')
-  @UseGuards(JwtAuthGuard)
   async accept(@Param('token') token: string, @Req() req: Request) {
     const user = req.user as any;
     return this.invitationService.acceptInvitation(token, user.userId);

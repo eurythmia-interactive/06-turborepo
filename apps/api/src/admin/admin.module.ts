@@ -17,7 +17,6 @@ import { AdminThrottlerGuard } from './admin.throttler.js';
 import { IpAllowlistService } from './services/ip-allowlist.service.js';
 import { IpAllowlistGuard } from './guards/ip-allowlist.guard.js';
 import { IpAllowlistController } from './controllers/ip-allowlist.controller.js';
-import { MaintenanceMiddleware } from './system/maintenance.middleware.js';
 
 @Module({
   imports: [
@@ -46,6 +45,6 @@ import { MaintenanceMiddleware } from './system/maintenance.middleware.js';
       useClass: AdminThrottlerGuard,
     },
   ],
-  exports: [AdminService, AuditService, IpAllowlistService, MaintenanceMiddleware],
+  exports: [AdminService, AuditService, IpAllowlistService],
 })
 export class AdminModule {}
