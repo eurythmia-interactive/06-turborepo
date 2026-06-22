@@ -1,10 +1,10 @@
-# Turborepo Monorepo — Full-Stack Application
+# 06-TUrborepo — Full-Stack Monorepo
 
-A production-ready monorepo built with **Turborepo**, **pnpm**, **Next.js 16**, and **NestJS 11** featuring shared validation, secure authentication, RBAC, multi-tenancy, and comprehensive testing.
+A production-ready monorepo built with **Turborepo 2.9**, **pnpm 11**, **Next.js 16**, and **NestJS 11** featuring shared validation, secure authentication, RBAC, multi-tenancy, an admin dashboard, and comprehensive testing.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Tech Stack](#tech-stack)
@@ -13,12 +13,14 @@ A production-ready monorepo built with **Turborepo**, **pnpm**, **Next.js 16**, 
 - [Development Workflow](#development-workflow)
 - [Database](#database)
 - [Authentication & Authorization](#authentication--authorization)
+- [Admin Dashboard](#admin-dashboard)
+- [API Endpoints](#api-endpoints)
 - [Testing](#testing)
 - [CI/CD](#cicd)
 - [Docker Deployment](#docker-deployment)
 - [Environment Variables](#environment-variables)
+- [Known Issues](#known-issues)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -26,11 +28,12 @@ A production-ready monorepo built with **Turborepo**, **pnpm**, **Next.js 16**, 
 
 This monorepo provides a complete full-stack application with:
 
-- **Backend**: NestJS 11 API with JWT authentication, RBAC, and multi-tenancy
-- **Frontend**: Next.js 16 dashboard with React 19, Tailwind v4, and shadcn/ui
-- **Database**: PostgreSQL 16 with Prisma 7 ORM
-- **Shared**: Type-safe validation contracts using Zod 4
-- **Testing**: 347+ tests with Vitest, React Testing Library, and E2E coverage
+- **Backend**: NestJS 11 API with JWT authentication, RBAC (21 permissions), multi-tenancy, and email service
+- **Frontend**: Next.js 16 dashboard with React 19, Tailwind CSS v4, shadcn/ui components, and server actions
+- **Admin Dashboard**: Full admin panel with user/tenant/role management, maintenance mode, impersonation, invitations, IP allowlist, audit logs, sessions, and analytics
+- **Database**: PostgreSQL 16 with Prisma 7 ORM (14 models)
+- **Shared**: Type-safe validation contracts using Zod 4 (11 admin schemas)
+- **Testing**: 462+ tests with Vitest, React Testing Library, MSW, and E2E coverage
 - **CI/CD**: GitHub Actions with automated testing and Docker builds
 
 ---
@@ -54,17 +57,23 @@ This monorepo provides a complete full-stack application with:
 | **Prisma**     | 7.8.0   | ORM              |
 | **PostgreSQL** | 16      | Database         |
 | **JWT**        | —       | Authentication   |
-| **Argon2**     | 0.41.1  | Password hashing |
+| **Argon2**     | 0.44.0  | Password hashing |
+| **Helmet**     | 8.2.0   | Security headers |
+| **Resend**     | 6.14.0  | Email delivery   |
 
 ### Frontend (apps/web)
 
-| Tool                | Version | Purpose           |
-| ------------------- | ------- | ----------------- |
-| **Next.js**         | 16.2.9  | React framework   |
-| **React**           | 19.2.7  | UI library        |
-| **Tailwind CSS**    | v4      | Styling           |
-| **React Hook Form** | 7.54.2  | Form management   |
-| **shadcn/ui**       | —       | Component library |
+| Tool                | Version | Purpose             |
+| ------------------- | ------- | ------------------- |
+| **Next.js**         | 16.2.9  | React framework     |
+| **React**           | 19.2.7  | UI library          |
+| **Tailwind CSS**    | 4.3.1   | Styling             |
+| **React Hook Form** | 7.79.0  | Form management     |
+| **TanStack Table**  | 8.21.3  | Data tables         |
+| **Recharts**        | 3.8.1   | Charts              |
+| **Lucide React**    | 1.20.0  | Icons               |
+| **Sonner**          | 2.0.7   | Toast notifications |
+| **shadcn/ui**       | —       | Component library   |
 
 ### Shared Packages
 
@@ -82,7 +91,7 @@ This monorepo provides a complete full-stack application with:
 | **Vitest**                | 4.1.9   | Test runner     |
 | **React Testing Library** | 16.3.2  | Component tests |
 | **MSW**                   | 2.14.6  | API mocking     |
-| **Supertest**             | 7.1.0   | E2E testing     |
+| **Supertest**             | 7.2.2   | E2E testing     |
 | **Testcontainers**        | 12.0.2  | Test database   |
 
 ---
@@ -92,59 +101,124 @@ This monorepo provides a complete full-stack application with:
 ```
 .
 ├── apps/
-│   ├── api/                    # NestJS backend application
+│   ├── api/                          # NestJS 11 backend
 │   │   ├── src/
-│   │   │   ├── auth/           # Authentication module (JWT, guards)
-│   │   │   ├── common/         # Shared pipes, filters, interceptors
-│   │   │   ├── config/         # Environment validation
-│   │   │   ├── database/       # Prisma client injection
-│   │   │   ├── health/         # Health check endpoint
-│   │   │   ├── tenant/         # Multi-tenant management
-│   │   │   └── user/           # User management
-│   │   ├── test/               # E2E and integration tests
-│   │   ├── Dockerfile          # Multi-stage production build
+│   │   │   ├── admin/                # Admin module
+│   │   │   │   ├── admin.controller.ts
+│   │   │   │   ├── admin.module.ts
+│   │   │   │   ├── analytics/        # Dashboard metrics, growth, activity
+│   │   │   │   ├── audit/            # Audit log CRUD + export
+│   │   │   │   ├── controllers/      # IP allowlist controller
+│   │   │   │   ├── guards/           # IP allowlist guard
+│   │   │   │   ├── impersonation/    # User impersonation
+│   │   │   │   ├── invitation/       # Invitation management
+│   │   │   │   ├── role/             # Role CRUD + permissions
+│   │   │   │   ├── services/         # IP allowlist service
+│   │   │   │   ├── session/          # Session management
+│   │   │   │   ├── system/           # Maintenance mode (service, controller, middleware)
+│   │   │   │   ├── tenant/           # Tenant CRUD + stats
+│   │   │   │   └── user/             # User CRUD + bulk ops
+│   │   │   ├── auth/                 # JWT auth, guards, token refresh
+│   │   │   ├── common/
+│   │   │   │   └── email/            # Resend email service + templates
+│   │   │   ├── config/               # Environment validation (Zod)
+│   │   │   ├── database/             # Prisma client injection
+│   │   │   ├── health/               # Health check
+│   │   │   ├── invitation/           # Public invitation accept
+│   │   │   ├── tenant/               # Public tenant endpoints
+│   │   │   ├── user/                 # Public user endpoints
+│   │   │   └── main.ts               # Bootstrap (helmet, middleware, CORS)
+│   │   ├── test/
+│   │   │   ├── e2e/                  # E2E tests (maintenance, impersonation, invitation)
+│   │   │   └── helpers/              # Test DB, fixtures, test app
+│   │   ├── Dockerfile
 │   │   └── package.json
 │   │
-│   └── web/                    # Next.js frontend application
+│   └── web/                          # Next.js 16 frontend
 │       ├── src/
-│       │   ├── app/            # App Router pages
-│       │   │   ├── (auth)/     # Login/Register pages
-│       │   │   └── dashboard/  # Protected dashboard
-│       │   ├── actions/        # Server actions
-│       │   ├── components/     # React components
-│       │   │   ├── forms/      # Form components with validation
-│       │   │   ├── layout/     # Layout primitives
-│       │   │   └── ui/         # shadcn/ui components
-│       │   ├── hooks/          # Custom React hooks
-│       │   ├── lib/            # API clients, session, utilities
-│       │   └── providers/      # Context providers
-│       ├── proxy.ts            # Route protection middleware
-│       ├── Dockerfile          # Multi-stage production build
+│       │   ├── app/
+│       │   │   ├── admin/            # Admin dashboard pages
+│       │   │   │   ├── audit/        # Audit logs
+│       │   │   │   ├── invitations/  # Invitation management
+│       │   │   │   ├── login/        # Admin login
+│       │   │   │   ├── roles/        # Role management
+│       │   │   │   │   └── [id]/edit/
+│       │   │   │   ├── sessions/     # Session management
+│       │   │   │   ├── settings/     # System settings
+│       │   │   │   ├── tenants/      # Tenant management
+│       │   │   │   │   └── [id]/
+│       │   │   │   ├── users/        # User management
+│       │   │   │   │   └── [id]/
+│       │   │   │   └── page.tsx      # Dashboard
+│       │   │   ├── invite/
+│       │   │   │   └── [token]/      # Public invitation accept
+│       │   │   └── maintenance/      # Public maintenance page
+│       │   ├── actions/              # 13 server action files
+│       │   │   ├── audit.ts
+│       │   │   ├── auth.ts
+│       │   │   ├── dashboard.ts
+│       │   │   ├── impersonation.ts
+│       │   │   ├── invitations.ts
+│       │   │   ├── maintenance.ts
+│       │   │   ├── profile.ts
+│       │   │   ├── register.ts
+│       │   │   ├── roles.ts
+│       │   │   ├── sessions.ts
+│       │   │   ├── system.ts          # IP allowlist actions
+│       │   │   ├── tenants.ts
+│       │   │   └── users.ts
+│       │   ├── components/
+│       │   │   ├── admin/            # 32 admin components
+│       │   │   │   ├── charts/       # Tenant activity, user growth charts
+│       │   │   │   ├── settings-panel.tsx
+│       │   │   │   ├── maintenance-toggle.tsx
+│       │   │   │   ├── impersonation-banner.tsx
+│       │   │   │   ├── dashboard-client.tsx
+│       │   │   │   └── ...           # Lists, dialogs, actions for all entities
+│       │   │   ├── forms/            # Login, register, profile forms
+│       │   │   └── ui/               # shadcn/ui components
+│       │   ├── lib/                  # API clients, session, mock data
+│       │   ├── mocks/                # MSW handlers
+│       │   └── providers/            # Context providers
+│       ├── next.config.ts            # transpilePackages, webpack extensionAlias
+│       ├── proxy.ts                  # Route protection middleware
+│       ├── Dockerfile
 │       └── package.json
 │
 ├── packages/
-│   ├── shared/                 # Shared validation contracts
+│   ├── shared/                       # Shared validation contracts
 │   │   └── src/
-│   │       ├── auth/           # Zod schemas (login, register, profile)
-│   │       └── index.ts        # Unified exports
+│   │       ├── auth/                 # Login, register, profile schemas
+│   │       ├── admin/                # 11 admin schema files
+│   │       │   ├── audit.schema.ts
+│   │       │   ├── dashboard.schema.ts
+│   │       │   ├── invitation.schema.ts
+│   │       │   ├── password.schema.ts
+│   │       │   ├── permissions.ts    # 21 permissions, role mappings
+│   │       │   ├── role.schema.ts
+│   │       │   ├── session.schema.ts
+│   │       │   ├── system.schema.ts
+│   │       │   ├── tenant.schema.ts
+│   │       │   └── user.schema.ts
+│   │       └── index.ts              # Unified barrel exports
 │   │
-│   ├── database/               # Prisma schema and client
+│   ├── database/                     # Prisma schema + client
 │   │   ├── prisma/
-│   │   │   ├── schema.prisma   # Database models
-│   │   │   └── seed.ts         # Seed script
-│   │   └── src/                # Prisma client wrapper
+│   │   │   ├── schema.prisma         # 14 models, 4 enums
+│   │   │   └── seed.ts
+│   │   └── src/
 │   │
-│   ├── config-eslint/          # ESLint 9 flat config
-│   └── config-typescript/      # Shared TypeScript configs
+│   ├── config-eslint/                # ESLint 9 flat config
+│   └── config-typescript/            # Shared TypeScript configs
 │
 ├── .github/
-│   └── workflows/ci.yml        # GitHub Actions CI/CD
+│   └── workflows/ci.yml              # GitHub Actions CI/CD
 │
-├── docker-compose.yml          # PostgreSQL + dev services
-├── turbo.json                  # Turborepo pipeline
-├── pnpm-workspace.yaml         # pnpm workspace config
-├── package.json                # Root dependencies
-└── README.md                   # This file
+├── reports/                          # Session reports (Dashboard-summary-*.md)
+├── docker-compose.yml                # PostgreSQL + dev services
+├── turbo.json                        # Turborepo pipeline
+├── pnpm-workspace.yaml               # pnpm workspace config
+└── package.json                      # Root scripts + devDependencies
 ```
 
 ---
@@ -154,32 +228,24 @@ This monorepo provides a complete full-stack application with:
 ### Prerequisites
 
 - **Node.js** ≥22.0.0
-- **pnpm** 11.7.0 (Corepack enabled)
+- **pnpm** 11.7.0 (via Corepack)
 - **Docker** and **Docker Compose** (for database)
-- **Git** (for version control)
+- **Git**
 
-### 1. Clone the Repository
+### 1. Clone and Install
 
 ```bash
 git clone <repository-url>
-cd <project-root>
-```
+cd 06-TUrborepo
 
-### 2. Install Dependencies
-
-```bash
 corepack enable
+corepack prepare pnpm@11.7.0 --activate
 pnpm install
 ```
 
-> **Note:** pnpm will auto-install the correct version defined in `packageManager` field.
-
-### 3. Set Up Environment Variables
-
-Create `.env` files in the root and packages:
+### 2. Set Up Environment Variables
 
 ```bash
-# Root .env
 cp .env.example .env
 ```
 
@@ -193,50 +259,49 @@ POSTGRES_PASSWORD=dev
 POSTGRES_DB=app_dev
 
 # JWT
-JWT_SECRET=your-secret-key  # Use a secure key in production
+JWT_SECRET=your-secret-key-min-32-chars
 JWT_EXPIRES_IN_ACCESS=15m
 JWT_EXPIRES_IN_REFRESH=7d
 
 # CORS
 CORS_ORIGINS=http://localhost:3000
 
-# Optional: RSA for production
-# JWT_PRIVATE_KEY=base64-encoded-private-key
-# JWT_PUBLIC_KEY=base64-encoded-public-key
+# Email (Resend)
+RESEND_API_KEY=re_your_api_key_here
+EMAIL_FROM=noreply@example.com
+WEB_URL=http://localhost:3000
 ```
 
-### 4. Start PostgreSQL
+### 3. Start Database
 
 ```bash
 docker compose --profile dev up -d
 ```
 
-### 5. Run Database Migrations
+### 4. Migrate and Seed
 
 ```bash
 pnpm --filter @repo/database db:migrate
-```
-
-### 6. Seed the Database
-
-```bash
 pnpm --filter @repo/database db:seed
 ```
 
 This creates:
 
-- **Admin user**: `admin@example.com` / `Admin123!`
-- **Member user**: `member@example.com` / `Member123!`
+- **Super Admin**: `admin@example.com` / `Admin123!`
+- **Member**: `member@example.com` / `Member123!`
 
-### 7. Start Development Servers
+### 5. Start Development
 
 ```bash
 pnpm dev
 ```
 
-- **Web**: http://localhost:3000
-- **API**: http://localhost:3001
-- **Prisma Studio**: http://localhost:5555
+| Service           | URL                         |
+| ----------------- | --------------------------- |
+| **Web (Next.js)** | http://localhost:3000       |
+| **Admin Panel**   | http://localhost:3000/admin |
+| **API (NestJS)**  | http://localhost:3001       |
+| **Prisma Studio** | http://localhost:5555       |
 
 ---
 
@@ -246,120 +311,72 @@ pnpm dev
 
 ```bash
 # Development
-pnpm dev                      # Start all apps in dev mode
-pnpm --filter @apps/web dev   # Start only web
-pnpm --filter @apps/api dev   # Start only API
+pnpm dev                        # Start all apps in dev mode
+pnpm --filter @apps/web dev     # Start only web
+pnpm --filter @apps/api dev     # Start only API
 
 # Build
-pnpm build                    # Build all packages
-pnpm --filter @apps/web build # Build only web
-pnpm --filter @apps/api build # Build only API
+pnpm build                      # Build all packages
+pnpm --filter @apps/web build   # Build only web
+pnpm --filter @apps/api build   # Build only API
 
 # Lint & Format
-pnpm lint                     # ESLint all packages
-pnpm lint:ox                  # Oxlint fast lint
-pnpm format:check             # Check formatting
-pnpm format:write             # Fix formatting
+pnpm lint                       # ESLint all packages
+pnpm lint:ox                    # Oxlint fast lint
+pnpm format:check               # Check formatting
+pnpm format                     # Fix formatting
 
 # Test
-pnpm test                     # Run all tests
-pnpm --filter @apps/api test  # API tests
-pnpm --filter @apps/web test  # Web tests
-pnpm test:coverage            # Generate coverage reports
+pnpm test                       # Run all tests
+pnpm --filter @apps/api test    # API tests
+pnpm --filter @apps/web test    # Web tests
 
 # Database
-pnpm --filter @repo/database db:studio         # Open Prisma Studio
-pnpm --filter @repo/database db:migrate        # Run migrations
-pnpm --filter @repo/database db:migrate:deploy # CI migrations
+pnpm db:up                      # Start PostgreSQL
+pnpm db:studio                  # Open Prisma Studio
+pnpm --filter @repo/database db:migrate        # Create migration
+pnpm --filter @repo/database db:migrate:deploy # Apply migrations
 pnpm --filter @repo/database db:seed           # Seed database
+pnpm --filter @repo/database db:generate       # Regenerate Prisma client
+
+# Clean
+pnpm clean                      # Remove build outputs and node_modules
 ```
 
-### Git Hooks
+### Git Hooks (Husky)
 
-- **pre-commit**: Runs Oxlint + Prettier on staged files
-- **pre-push**: Runs full Turbo pipeline (build, lint, test)
+- **pre-commit**: Oxlint + Prettier on staged files
+- **pre-push**: Full Turbo pipeline (build, lint, test)
 
 ---
 
 ## Database
 
-### Schema Overview
+### Models (14 total)
 
-```prisma
-model User {
-  id                      String                   @id @default(uuid())
-  email                   String                   @unique
-  name                    String?
-  image                   String?
-  status                  UserStatus               @default(ACTIVE)
-  role                    Role                     @default(MEMBER)
-  authenticationProviders AuthenticationProvider[]
-  refreshTokens           RefreshToken[]
-  userTenants             UserTenant[]
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
-}
+| #   | Model                      | Key Fields                                                                                               | Purpose                                             |
+| --- | -------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1   | **User**                   | `id`, `email` (unique), `name`, `status`, `role`, `customRoleId`, `isSystem`, `lastLoginAt`, `deletedAt` | User accounts                                       |
+| 2   | **Tenant**                 | `id`, `name`, `slug` (unique), `plan`, `domain`, `suspended`, `isSystem`, `deletedAt`                    | Multi-tenant organizations                          |
+| 3   | **UserTenant**             | `userId` + `tenantId` (composite PK), `role`, `customRoleId`                                             | Many-to-many user-tenant membership                 |
+| 4   | **CustomRole**             | `id`, `name` (unique), `description`, `permissions[]`, `isSystem`                                        | Custom RBAC roles                                   |
+| 5   | **AuthenticationProvider** | `id`, `userId`, `type` (LOCAL\|GITHUB\|GOOGLE), `providerUserId`, `passwordHash`                         | Auth method per user                                |
+| 6   | **RefreshToken**           | `id`, `userId`, `tokenHash` (unique), `familyId`, `revoked`, `ip`, `userAgent`, `expiresAt`              | Token rotation with reuse detection                 |
+| 7   | **AuditLog**               | `id`, `userId`, `tenantId`, `action`, `details` (JSON), `ip`, `userAgent`                                | Activity audit trail                                |
+| 8   | **SystemConfig**           | `id`, `key` (unique), `value` (JSON), `description`, `updatedBy`                                         | Key-value system config (maintenance, IP allowlist) |
+| 9   | **FeatureFlag**            | `id`, `key` (unique), `name`, `description`, `enabled`, `tenantId`                                       | Feature toggles                                     |
+| 10  | **ApiKey**                 | `id`, `name`, `keyHash` (unique), `tenantId`, `permissions[]`, `expiresAt`, `revoked`                    | API key management                                  |
+| 11  | **UserInvitation**         | `id`, `email`, `token` (unique), `tenantId`, `role`, `invitedBy`, `acceptedAt`, `expiresAt`              | Email invitations (7-day expiry)                    |
+| 12  | **PasswordResetToken**     | `id`, `userId`, `token` (unique), `expiresAt`, `usedAt`                                                  | Password reset flow                                 |
 
-model Tenant {
-  id          String       @id @default(uuid())
-  name        String
-  slug        String       @unique
-  users       UserTenant[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
+### Enums (4)
 
-model UserTenant {
-  userId    String
-  tenantId  String
-  user      User     @relation(fields: [userId], references: [id])
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  joinedAt  DateTime @default(now())
-  @@id([userId, tenantId])
-}
-
-model AuthenticationProvider {
-  id            String             @id @default(uuid())
-  userId        String
-  provider      AuthProviderType   @default(LOCAL)
-  providerId    String?
-  password      String?            // Hashed with argon2
-  user          User               @relation(fields: [userId], references: [id])
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  @@unique([userId, provider])
-}
-
-model RefreshToken {
-  id             String   @id @default(cuid())
-  tokenHash      String   @unique
-  userId         String
-  familyId       String
-  sessionId      String
-  expiresAt      DateTime
-  revoked        Boolean  @default(false)
-  replacedById   String?  // Points to token that replaced this one
-  replacedBy     RefreshToken? @relation("ReplacedBy", fields: [replacedById], references: [id])
-  user           User     @relation(fields: [userId], references: [id])
-  createdAt      DateTime @default(now())
-}
-```
-
-### Enums
-
-- **UserStatus**: `ACTIVE`, `SUSPENDED`, `PENDING`
-- **Role**: `SUPER_ADMIN`, `ADMIN`, `MEMBER`, `GUEST`
-- **AuthProviderType**: `LOCAL`, `GITHUB`, `GOOGLE`
-
-### Migration Workflow
-
-```bash
-# Create a new migration
-pnpm --filter @repo/database db:migrate -- --name your_migration_name
-
-# Apply migrations in production
-pnpm --filter @repo/database db:migrate:deploy
-```
+| Enum               | Values                            |
+| ------------------ | --------------------------------- |
+| `UserStatus`       | ACTIVE, SUSPENDED, PENDING        |
+| `Role`             | SUPER_ADMIN, ADMIN, MEMBER, GUEST |
+| `AuthProviderType` | LOCAL, GITHUB, GOOGLE             |
+| `Plan`             | free, pro, enterprise             |
 
 ---
 
@@ -376,7 +393,7 @@ pnpm --filter @repo/database db:migrate:deploy
 
 | Token             | Type                  | Lifespan   | Storage              |
 | ----------------- | --------------------- | ---------- | -------------------- |
-| **Access Token**  | JWT                   | 15 minutes | Authorization header |
+| **Access Token**  | JWT (HS256 or RS256)  | 15 minutes | Authorization header |
 | **Refresh Token** | Random + SHA-256 hash | 7 days     | httpOnly cookie      |
 
 **Security Features:**
@@ -395,7 +412,7 @@ pnpm --filter @repo/database db:migrate:deploy
 async adminEndpoint() { ... }
 
 // Permission-based access
-@Permissions('user:write', 'billing:read')
+@Permissions('user:write')
 @Patch('users/:id')
 async updateUser() { ... }
 
@@ -409,29 +426,134 @@ async healthCheck() { ... }
 async getProfile(@CurrentUser() user: AuthenticatedUser) { ... }
 ```
 
-**Role-Permission Matrix:**
+### Permission System (21 permissions, 5 categories)
 
-| Role        | User:Read | User:Write | User:Delete | Tenant:Read | Tenant:Write | Billing:Read | Billing:Write |
-| ----------- | --------- | ---------- | ----------- | ----------- | ------------ | ------------ | ------------- |
-| SUPER_ADMIN | ✅        | ✅         | ✅          | ✅          | ✅           | ✅           | ✅            |
-| ADMIN       | ✅        | ✅         | ✅          | ✅          | ✅           | ✅           | ✅            |
-| MEMBER      | ✅        | ✅         | ❌          | ✅          | ❌           | ✅           | ❌            |
-| GUEST       | ✅        | ❌         | ❌          | ✅          | ❌           | ❌           | ❌            |
+| Category   | Permissions                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| **Tenant** | `tenant:read`, `tenant:write`, `tenant:delete`, `tenant:suspend`                                    |
+| **User**   | `user:read`, `user:write`, `user:delete`, `user:suspend`, `user:reset-password`, `user:impersonate` |
+| **Role**   | `role:read`, `role:write`, `role:delete`                                                            |
+| **Admin**  | `admin:access`, `admin:settings`, `admin:feature-flags`, `admin:audit`, `admin:api-keys`            |
+| **System** | `system:maintenance`, `system:backup`, `system:config`                                              |
 
-### API Endpoints
+**Role-to-Permission mapping:**
 
-| Method | Path                             | Auth              | Description              |
-| ------ | -------------------------------- | ----------------- | ------------------------ |
-| POST   | `/api/v1/auth/register`          | Public            | User registration        |
-| POST   | `/api/v1/auth/login`             | Public            | Login with credentials   |
-| POST   | `/api/v1/auth/refresh`           | Public            | Refresh access token     |
-| POST   | `/api/v1/auth/logout`            | Required          | Logout and revoke token  |
-| GET    | `/api/v1/auth/profile`           | Required          | Get current user profile |
-| PATCH  | `/api/v1/auth/profile`           | Required          | Update user profile      |
-| POST   | `/api/v1/auth/select-tenant/:id` | Required          | Switch active tenant     |
-| POST   | `/api/v1/tenants`                | SUPER_ADMIN       | Create tenant            |
-| GET    | `/api/v1/tenants`                | SUPER_ADMIN/ADMIN | List tenants             |
-| GET    | `/api/v1/health`                 | Public            | Health check             |
+| Role            | Tenant      | User               | Role  | Admin             | System | Total |
+| --------------- | ----------- | ------------------ | ----- | ----------------- | ------ | ----- |
+| **SUPER_ADMIN** | All 4       | All 6              | All 3 | All 5             | All 3  | 21    |
+| **ADMIN**       | All 4       | 5 (no impersonate) | All 3 | 2 (access, audit) | —      | 14    |
+| **MEMBER**      | tenant:read | user:read          | —     | —                 | —      | 2     |
+| **GUEST**       | —           | user:read          | —     | —                 | —      | 1     |
+
+---
+
+## Admin Dashboard
+
+The admin dashboard (`/admin`) provides a full system management interface:
+
+### Features
+
+| Feature         | Description                                                | Route                |
+| --------------- | ---------------------------------------------------------- | -------------------- |
+| **Dashboard**   | Metrics cards, growth charts, activity feed, recent events | `/admin`             |
+| **Users**       | CRUD, bulk operations, suspend/restore, role assignment    | `/admin/users`       |
+| **Tenants**     | CRUD, suspend/restore, stats, plan management              | `/admin/tenants`     |
+| **Roles**       | CRUD, permission matrix editor, system role protection     | `/admin/roles`       |
+| **Audit Logs**  | Filterable log viewer, detail modal, CSV export            | `/admin/audit`       |
+| **Sessions**    | Active session list, revoke individual/all                 | `/admin/sessions`    |
+| **Invitations** | Create, resend, cancel invitations; status tracking        | `/admin/invitations` |
+| **Settings**    | IP allowlist, maintenance mode toggle                      | `/admin/settings`    |
+
+### Admin-Only Features
+
+| Feature                | Description                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Maintenance Mode**   | Enable/disable site-wide maintenance with custom message and scheduled end time. Blocks non-admin traffic with 503 responses. SUPER_ADMIN bypass.            |
+| **User Impersonation** | Support tool — admins can impersonate users (1-hour sessions). Audit logged. Cannot impersonate SUPER_ADMIN or self. Persistent banner with countdown timer. |
+| **Email Invitations**  | Invite users by email via Resend. 7-day expiry. Public accept page at `/invite/[token]`. Auto-accept flow after registration.                                |
+| **IP Allowlist**       | Restrict admin panel access to specific IP addresses. Empty list = all allowed.                                                                              |
+| **Session Timeout**    | Warning banner when session is about to expire.                                                                                                              |
+
+---
+
+## API Endpoints
+
+### Public Endpoints
+
+| Method  | Path                                | Auth     | Description              |
+| ------- | ----------------------------------- | -------- | ------------------------ |
+| `GET`   | `/api/v1/health`                    | Public   | Health check             |
+| `POST`  | `/api/v1/auth/register`             | Public   | User registration        |
+| `POST`  | `/api/v1/auth/login`                | Public   | Login with credentials   |
+| `POST`  | `/api/v1/auth/refresh`              | Public   | Refresh access token     |
+| `POST`  | `/api/v1/auth/logout`               | Required | Logout and revoke token  |
+| `GET`   | `/api/v1/auth/profile`              | Required | Get current user profile |
+| `PATCH` | `/api/v1/auth/profile`              | Required | Update user profile      |
+| `POST`  | `/api/v1/auth/select-tenant/:id`    | Required | Switch active tenant     |
+| `GET`   | `/api/v1/invitations/:token`        | Public   | View invitation details  |
+| `POST`  | `/api/v1/invitations/:token/accept` | Required | Accept invitation        |
+
+### Admin Endpoints (`/api/v1/admin/*`)
+
+| Method            | Path                                | Permission           | Description                        |
+| ----------------- | ----------------------------------- | -------------------- | ---------------------------------- |
+| **Users**         |                                     |                      |                                    |
+| `GET`             | `/admin/users`                      | `user:read`          | List users (paginated, filterable) |
+| `GET`             | `/admin/users/:id`                  | `user:read`          | Get user detail                    |
+| `POST`            | `/admin/users`                      | `user:write`         | Create user                        |
+| `PATCH`           | `/admin/users/:id`                  | `user:write`         | Update user                        |
+| `DELETE`          | `/admin/users/:id`                  | `user:delete`        | Soft-delete user                   |
+| `POST`            | `/admin/users/:id/suspend`          | `user:suspend`       | Suspend user                       |
+| `POST`            | `/admin/users/:id/restore`          | `user:write`         | Restore user                       |
+| `POST`            | `/admin/users/bulk`                 | `user:write`         | Bulk operations                    |
+| `POST`            | `/admin/users/bulk/role`            | `user:write`         | Bulk role assignment               |
+| **Tenants**       |                                     |                      |                                    |
+| `GET`             | `/admin/tenants`                    | `tenant:read`        | List tenants                       |
+| `GET`             | `/admin/tenants/:id`                | `tenant:read`        | Get tenant detail                  |
+| `POST`            | `/admin/tenants`                    | `tenant:write`       | Create tenant                      |
+| `PATCH`           | `/admin/tenants/:id`                | `tenant:write`       | Update tenant                      |
+| `DELETE`          | `/admin/tenants/:id`                | `tenant:delete`      | Soft-delete tenant                 |
+| `POST`            | `/admin/tenants/:id/suspend`        | `tenant:suspend`     | Suspend tenant                     |
+| `POST`            | `/admin/tenants/:id/restore`        | `tenant:write`       | Restore tenant                     |
+| `GET`             | `/admin/tenants/:id/stats`          | `tenant:read`        | Tenant statistics                  |
+| **Roles**         |                                     |                      |                                    |
+| `GET`             | `/admin/roles`                      | `role:read`          | List roles                         |
+| `GET`             | `/admin/roles/:id`                  | `role:read`          | Get role detail                    |
+| `POST`            | `/admin/roles`                      | `role:write`         | Create role                        |
+| `PATCH`           | `/admin/roles/:id`                  | `role:write`         | Update role                        |
+| `DELETE`          | `/admin/roles/:id`                  | `role:delete`        | Delete role                        |
+| `POST`            | `/admin/roles/:id/permissions`      | `role:write`         | Assign permissions                 |
+| **Audit**         |                                     |                      |                                    |
+| `GET`             | `/admin/audit`                      | `admin:audit`        | List audit logs                    |
+| `GET`             | `/admin/audit/:id`                  | `admin:audit`        | Get log detail                     |
+| `GET`             | `/admin/audit/summary`              | `admin:audit`        | Audit summary                      |
+| `GET`             | `/admin/audit/export`               | `admin:audit`        | Export audit logs                  |
+| **Sessions**      |                                     |                      |                                    |
+| `GET`             | `/admin/sessions`                   | `admin:access`       | List active sessions               |
+| `POST`            | `/admin/sessions/:id/revoke`        | `admin:access`       | Revoke session                     |
+| `POST`            | `/admin/sessions/revoke-all`        | `admin:access`       | Revoke all sessions                |
+| **Invitations**   |                                     |                      |                                    |
+| `GET`             | `/admin/invitations`                | `admin:access`       | List invitations                   |
+| `POST`            | `/admin/invitations`                | `admin:access`       | Create invitation                  |
+| `POST`            | `/admin/invitations/:id/resend`     | `admin:access`       | Resend invitation                  |
+| `POST`            | `/admin/invitations/:id/cancel`     | `admin:access`       | Cancel invitation                  |
+| **Dashboard**     |                                     |                      |                                    |
+| `GET`             | `/admin/dashboard/metrics`          | `admin:access`       | Dashboard metrics                  |
+| `GET`             | `/admin/dashboard/growth`           | `admin:access`       | Growth data                        |
+| `GET`             | `/admin/dashboard/activity`         | `admin:access`       | Activity data                      |
+| `GET`             | `/admin/dashboard/recent`           | `admin:access`       | Recent activity                    |
+| **Impersonation** |                                     |                      |                                    |
+| `POST`            | `/admin/impersonation/start`        | `user:impersonate`   | Start impersonating                |
+| `POST`            | `/admin/impersonation/stop`         | `user:impersonate`   | Stop impersonating                 |
+| `GET`             | `/admin/impersonation/status`       | Required             | Get impersonation status           |
+| **System**        |                                     |                      |                                    |
+| `GET`             | `/admin/system/maintenance/status`  | Required             | Maintenance status                 |
+| `POST`            | `/admin/system/maintenance/enable`  | `system:maintenance` | Enable maintenance                 |
+| `POST`            | `/admin/system/maintenance/disable` | `system:maintenance` | Disable maintenance                |
+| **IP Allowlist**  |                                     |                      |                                    |
+| `GET`             | `/admin/ip-allowlist`               | `admin:settings`     | List allowed IPs                   |
+| `POST`            | `/admin/ip-allowlist`               | `admin:settings`     | Add IP                             |
+| `DELETE`          | `/admin/ip-allowlist/:ip`           | `admin:settings`     | Remove IP                          |
 
 ---
 
@@ -442,24 +564,25 @@ async getProfile(@CurrentUser() user: AuthenticatedUser) { ... }
 ```
 apps/api/
 ├── test/
-│   ├── e2e/               # End-to-end tests
-│   │   ├── auth.e2e-spec.ts
-│   │   ├── health.e2e-spec.ts
-│   │   └── ...
-│   ├── helpers/           # Test utilities
-│   │   ├── test-db.ts
-│   │   ├── test-app.ts
-│   │   └── fixtures.ts
+│   ├── e2e/                      # E2E tests (maintenance, impersonation, invitation)
+│   ├── helpers/                  # Test database, app bootstrap, fixtures
 │   └── database.module.spec.ts
 └── src/
-    └── **/*.spec.ts       # Unit tests
+    └── **/*.spec.ts              # 28 unit test files
 
 apps/web/
-├── src/
-│   ├── __tests__/
-│   │   ├── unit/          # Unit tests
-│   │   └── components/    # Component tests
-│   └── mocks/             # MSW handlers
+└── src/
+    ├── __tests__/
+    │   └── components/           # Component tests (profile form, etc.)
+    ├── actions/
+    │   └── *.test.ts             # 7 server action test files
+    └── components/
+        └── admin/
+            └── *.test.tsx        # 13 component test files
+
+packages/shared/
+└── src/
+    └── **/*.test.ts              # 4 shared schema test files
 ```
 
 ### Test Commands
@@ -468,45 +591,42 @@ apps/web/
 # Run all tests
 pnpm test
 
-# API tests
-pnpm --filter @apps/api test         # Unit tests
-pnpm --filter @apps/api test:e2e     # E2E tests
-pnpm --filter @apps/api test:cov     # Coverage
+# By package
+pnpm --filter @apps/api test         # Backend unit tests
+pnpm --filter @apps/api test:e2e     # Backend E2E tests
+pnpm --filter @apps/web test         # Frontend tests
+pnpm --filter @repo/shared test      # Shared schema tests
 
-# Web tests
-pnpm --filter @apps/web test         # All tests
-pnpm --filter @apps/web test:coverage # Coverage
-pnpm --filter @apps/web test:watch   # Watch mode
+# Watch mode
+pnpm --filter @apps/web test:watch
+pnpm --filter @repo/shared test:watch
 ```
 
 ### Test Coverage
 
 | Package   | Tests   | Status             |
 | --------- | ------- | ------------------ |
-| API Unit  | 192     | ✅ Passing         |
-| API E2E   | 70      | ✅ Passing         |
-| Web Tests | 85      | ✅ Passing         |
-| **Total** | **347** | ✅ **All Passing** |
+| Backend   | 321     | ✅ Passing         |
+| Frontend  | 141     | ✅ Passing         |
+| **Total** | **462** | ✅ **All Passing** |
 
 ### Test Stack
 
 - **Vitest 4** — Fast test runner with ESM support
 - **React Testing Library** — Component tests with user-centric API
-- **MSW** — Network-level API mocking
-- **Supertest** — HTTP assertion library
-- **Testcontainers** — Ephemeral PostgreSQL for E2E tests
+- **MSW 2** — Network-level API mocking for frontend tests
+- **Supertest** — HTTP assertion library for E2E tests
+- **Testcontainers** — Ephemeral PostgreSQL for integration tests
 
 ---
 
 ## CI/CD
 
-### GitHub Actions Workflow
-
-**File**: `.github/workflows/ci.yml`
+### GitHub Actions Workflow (`ci.yml`)
 
 **Pipeline Stages:**
 
-1. **Setup** — Checkout, pnpm install, cache restoration
+1. **Setup** — Checkout, pnpm install, cache
 2. **Format Check** — Prettier verification
 3. **Lint** — ESLint + Oxlint
 4. **Build** — TypeScript compilation across all packages
@@ -538,7 +658,6 @@ services:
 **API Dockerfile** (`apps/api/Dockerfile`):
 
 - Multi-stage build with `node:22-alpine`
-- Openssl included for Prisma
 - Non-root user (`nestjs`)
 - Production dependencies only
 - Exposes port 3001
@@ -546,14 +665,13 @@ services:
 **Web Dockerfile** (`apps/web/Dockerfile`):
 
 - Multi-stage build with standalone output
-- Optimized Next.js deployment
 - Non-root user (`nextjs`)
 - Exposes port 3000
 
 ### Build Commands
 
 ```bash
-# Build all Docker images
+# Build Docker images
 docker build -t api -f apps/api/Dockerfile .
 docker build -t web -f apps/web/Dockerfile .
 
@@ -562,42 +680,32 @@ docker run -p 3001:3001 api
 docker run -p 3000:3000 web
 ```
 
-### Environment Variables for Production
-
-```env
-NODE_ENV=production
-DATABASE_URL=postgresql://user:pass@db-host:5432/db
-JWT_SECRET=strong-secret-key
-JWT_EXPIRES_IN_ACCESS=15m
-JWT_EXPIRES_IN_REFRESH=7d
-CORS_ORIGINS=https://your-domain.com
-```
-
 ---
 
 ## Environment Variables
 
 ### Root `.env`
 
-| Variable                 | Required | Default            | Description                     |
-| ------------------------ | -------- | ------------------ | ------------------------------- |
-| `DATABASE_URL`           | ✅       | —                  | PostgreSQL connection string    |
-| `POSTGRES_USER`          | ✅       | `dev`              | Database user                   |
-| `POSTGRES_PASSWORD`      | ✅       | `dev`              | Database password               |
-| `POSTGRES_DB`            | ✅       | `app_dev`          | Database name                   |
-| `JWT_SECRET`             | ✅       | —                  | JWT signing key (HS256)         |
-| `JWT_PRIVATE_KEY`        | ❌       | —                  | RSA private key (base64)        |
-| `JWT_PUBLIC_KEY`         | ❌       | —                  | RSA public key (base64)         |
-| `JWT_EXPIRES_IN_ACCESS`  | ❌       | `15m`              | Access token lifetime           |
-| `JWT_EXPIRES_IN_REFRESH` | ❌       | `7d`               | Refresh token lifetime          |
-| `JWT_ISSUER`             | ❌       | `turborepo-api`    | JWT issuer claim                |
-| `JWT_AUDIENCE`           | ❌       | `turborepo-client` | JWT audience claim              |
-| `CORS_ORIGINS`           | ✅       | —                  | Comma-separated allowed origins |
-| `COOKIE_SECURE`          | ❌       | `false`            | Secure cookie flag              |
-| `THROTTLE_TTL`           | ❌       | `60000`            | Rate limit time window (ms)     |
-| `THROTTLE_LIMIT`         | ❌       | `10`               | Requests per window             |
-| `NODE_ENV`               | ❌       | `development`      | Environment                     |
-| `PORT`                   | ❌       | `3001`             | API port                        |
+| Variable                 | Required | Default                 | Description                            |
+| ------------------------ | -------- | ----------------------- | -------------------------------------- |
+| `DATABASE_URL`           | ✅       | —                       | PostgreSQL connection string           |
+| `POSTGRES_USER`          | ✅       | `dev`                   | Database user                          |
+| `POSTGRES_PASSWORD`      | ✅       | `dev`                   | Database password                      |
+| `POSTGRES_DB`            | ✅       | `app_dev`               | Database name                          |
+| `JWT_SECRET`             | ✅       | —                       | JWT signing key (min 32 chars)         |
+| `JWT_PRIVATE_KEY`        | ❌       | —                       | RSA private key (base64, for RS256)    |
+| `JWT_PUBLIC_KEY`         | ❌       | —                       | RSA public key (base64, for RS256)     |
+| `JWT_EXPIRES_IN_ACCESS`  | ❌       | `15m`                   | Access token lifetime                  |
+| `JWT_EXPIRES_IN_REFRESH` | ❌       | `7d`                    | Refresh token lifetime                 |
+| `CORS_ORIGINS`           | ✅       | —                       | Comma-separated allowed origins        |
+| `COOKIE_SECURE`          | ❌       | `false`                 | Secure cookie flag                     |
+| `THROTTLE_TTL`           | ❌       | `60000`                 | Rate limit time window (ms)            |
+| `THROTTLE_LIMIT`         | ❌       | `10`                    | Requests per window                    |
+| `RESEND_API_KEY`         | ❌       | —                       | Resend API key (falls back to console) |
+| `EMAIL_FROM`             | ❌       | `noreply@example.com`   | Sender email address                   |
+| `WEB_URL`                | ❌       | `http://localhost:3000` | Web app URL (for email links)          |
+| `NODE_ENV`               | ❌       | `development`           | Environment                            |
+| `PORT`                   | ❌       | `3001`                  | API port                               |
 
 ### Web `.env.local` (Client-side)
 
@@ -607,22 +715,49 @@ CORS_ORIGINS=https://your-domain.com
 
 ---
 
+## Known Issues
+
+### `transpilePackages` Required for `@repo/shared`
+
+Next.js (Webpack mode) does not follow workspace package re-exports correctly by default. Add `transpilePackages` to `next.config.ts`:
+
+```ts
+const nextConfig: NextConfig = {
+  transpilePackages: ['@repo/shared'],
+  // ...
+};
+```
+
+### Webpack Re-export Chain (Value Exports)
+
+Value exports through the barrel `index.ts` in `@repo/shared` (e.g., `PLAN_VALUES`) may resolve as `undefined` in client bundles. **Workaround:** inline simple constants directly in client components rather than importing through the barrel.
+
+### Turbopack Incompatibility
+
+Turbopack does not support Webpack's `extensionAlias` configuration. Use the `--webpack` flag in development:
+
+```bash
+pnpm --filter @apps/web dev     # Uses webpack (configured in package.json scripts)
+```
+
+---
+
 ## Contributing
 
 ### Development Guidelines
 
 1. **Branch naming**: `feature/`, `fix/`, `chore/`
 2. **Commit messages**: Conventional commits
-3. **Code style**: Prettier + ESLint
-4. **Type safety**: Strict TypeScript, no `any`
+3. **Code style**: Prettier + ESLint (Oxlint for pre-flight)
+4. **Type safety**: Strict TypeScript, avoid `any`
 
 ### Prerequisites Before PR
 
 ```bash
-pnpm format:write   # Format code
-pnpm lint           # Fix lint issues
-pnpm build          # Ensure build passes
-pnpm test           # Run all tests
+pnpm format                     # Format code
+pnpm lint                       # Fix lint issues
+pnpm build                      # Ensure build passes
+pnpm test                       # Run all tests
 ```
 
 ### Adding New Workspaces
@@ -631,19 +766,14 @@ pnpm test           # Run all tests
 2. Add `package.json` with `name` and `version`
 3. Update `pnpm-workspace.yaml` if needed
 4. Add `tsconfig.json` extending shared config
-5. Register in `turbo.json` tasks
+5. Register tasks in `turbo.json`
 
 ### Adding Dependencies
 
 ```bash
-# Add to a specific workspace
-pnpm --filter @apps/web add package-name
-
-# Add to all workspaces
-pnpm add -w package-name
-
-# Add dev dependency
-pnpm add -D package-name
+pnpm --filter @apps/web add package-name     # To a specific workspace
+pnpm add -w package-name                     # To root
+pnpm add -D package-name                     # Dev dependency
 ```
 
 ---
@@ -655,52 +785,42 @@ pnpm add -D package-name
 **1. `EADDRINUSE` on port 3000/3001**
 
 ```bash
-# Kill stale processes
 fuser -k 3000/tcp 3001/tcp
-
-# Or manually find and kill
-lsof -i :3000
-kill -9 <PID>
 ```
 
 **2. `DATABASE_URL` not found**
 
 ```bash
-# Load environment variables
 source .env
-# Or use dotenv-cli
-pnpm --filter @apps/api exec dotenv -e ../../.env -- pnpm db:migrate
+# Or use dotenv-cli:
+pnpm exec dotenv -e ../../.env -- pnpm db:migrate
 ```
 
 **3. Prisma client generation fails**
 
 ```bash
-# Regenerate client
 pnpm --filter @repo/database db:generate
-
-# Verify DATABASE_URL is set
-echo $DATABASE_URL
+echo $DATABASE_URL  # Verify it's set
 ```
 
 **4. TypeScript import errors**
 
-Ensure all imports use `.js` extensions when `moduleResolution: "NodeNext"`:
+Imports in `@repo/shared` use `.js` extensions (required for ESM output):
 
 ```typescript
 // ✅ Correct
-import { loginSchema } from '@repo/shared/auth/login.schema.js';
+export { loginSchema } from './auth/login.schema.js';
 
 // ❌ Incorrect
-import { loginSchema } from '@repo/shared/auth/login.schema';
+export { loginSchema } from './auth/login.schema';
 ```
 
-**5. Next.js build fails with extensionAlias**
-
-Turbopack doesn't support `extensionAlias`. Use webpack mode:
+**5. Next.js build fails with Turbopack**
 
 ```bash
-# Use webpack instead of turbopack
-pnpm --filter @apps/web dev:webpack
+# Use webpack mode (already set in package.json scripts)
+pnpm --filter @apps/web dev     # Runs: next dev --webpack --port 3000
+pnpm --filter @apps/web build   # Runs: next build --webpack
 ```
 
 ---
@@ -721,99 +841,5 @@ Built with:
 - [Prisma](https://www.prisma.io/) — Next-generation ORM
 - [Tailwind CSS](https://tailwindcss.com/) — Utility-first CSS
 - [shadcn/ui](https://ui.shadcn.com/) — Re-usable components
-
----
-
-///////////////////////////////////////
-
-# 06-TUrborepo
-
-Polyglot-ready monorepo foundation using **Turborepo 2.9** + **pnpm 11** workspaces.
-
-## Stack
-
-| Layer               | Tool       | Version         |
-| ------------------- | ---------- | --------------- |
-| Package manager     | pnpm       | 11.x            |
-| Build orchestrator  | Turborepo  | 2.9.x           |
-| Node.js runtime     | Node       | 22 LTS          |
-| Frontend            | Next.js    | 16.x            |
-| Backend             | NestJS     | 11.x            |
-| Database            | Prisma     | 7.x             |
-| Linter (full)       | ESLint     | 9.x flat config |
-| Linter (pre-flight) | Oxlint     | 1.x             |
-| Formatter           | Prettier   | 3.x             |
-| TypeScript          | TypeScript | 5.9             |
-
-## Workspaces
-
-```
-apps/
-  web/      # Next.js 16 application (@apps/web)
-  api/      # NestJS 11 application (@apps/api)
-packages/
-  shared/             # Runtime contracts (@repo/shared)
-  database/           # Prisma 7 client (@repo/database)
-  config-eslint/      # Shared ESLint flat configs
-  config-typescript/  # Shared tsconfig presets
-```
-
-## Prerequisites
-
-- Node.js **>= 22** (see `.nvmrc`)
-- pnpm **11** (auto-pinned via Corepack)
-
-## Setup
-
-```bash
-corepack enable
-corepack prepare pnpm@11.7.0 --activate
-pnpm install
-```
-
-## Scripts
-
-| Script         | Description                             |
-| -------------- | --------------------------------------- |
-| `pnpm dev`     | Run all dev servers in parallel         |
-| `pnpm build`   | Build all workspaces                    |
-| `pnpm lint`    | Lint all workspaces (ESLint)            |
-| `pnpm lint:ox` | Pre-flight lint (Oxlint, sub-second)    |
-| `pnpm test`    | Run all tests                           |
-| `pnpm format`  | Format with Prettier                    |
-| `pnpm clean`   | Remove all build outputs & node_modules |
-
-## Turbo Pipeline
-
-Defined in `turbo.json`:
-
-- **build** → depends on `^build` and `^db:generate`
-- **lint** → depends on `^build`, no outputs (read-only)
-- **test** → depends on `^build`, outputs `coverage/`
-- **dev** → persistent, no cache
-- **db:generate** → Prisma client generation
-
-## Remote Cache (CI)
-
-Set the following repository secrets to enable Turborepo remote caching:
-
-- `TURBO_TOKEN` — Vercel API token (or self-hosted)
-- `TURBO_TEAM` — Vercel team slug (as a variable)
-
-The CI workflow (`.github/workflows/ci.yml`) automatically wires these into every run.
-
-## Pre-commit
-
-Husky 9 runs `lint-staged` on every commit:
-
-1. `oxlint --fix` on staged TS/JS files
-2. `prettier --write` on staged files
-
-A `pre-push` hook runs the full `turbo build lint test` pipeline.
-
-## Path Aliases
-
-- `@repo/shared/*` → `packages/shared/src/*`
-- `@repo/database/*` → `packages/database/src/*`
-- `@/*` → `apps/web/src/*` (Next.js)
-- `@app/*` → `apps/api/src/*` (NestJS)
+- [Resend](https://resend.com/) — Email delivery
+- [Zod](https://zod.dev/) — TypeScript-first validation
