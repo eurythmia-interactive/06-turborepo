@@ -45,3 +45,7 @@ pnpm test                # Run all tests
 pnpm lint                # Run linter
 pnpm build               # Build all packages
 ```
+
+
+
+git push -u origin main --no-verify
